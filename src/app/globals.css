@@ -1,0 +1,20 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-h: #e74c3c;
+  --color-e: #3498db;
+  --color-x: #2ecc71;
+  --color-a: #f39c12;
+  --color-c: #9b59b6;
+  --color-o: #1abc9c;
+
+  --color-self: #3b82f6;
+  --color-ai: #8b5cf6;
+  --color-other: #f59e0b;
+}
+
+body {
+  @apply bg-gray-50 text-gray-900 antialiased;
+}
