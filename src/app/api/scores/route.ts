@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
     scores[key] = val;
   }
 
-  const success = upsertScores(
+  const success = await upsertScores(
     token.trim(),
     source as Source,
     scores as HexacoScores

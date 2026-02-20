@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
   const token = request.nextUrl.searchParams.get("token");
 
   if (token) {
-    const data = getParticipantByToken(token);
+    const data = await getParticipantByToken(token);
     if (!data) {
       return NextResponse.json(
         { error: "Participant not found" },
@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  const participants = listParticipants();
+  const participants = await listParticipants();
   return NextResponse.json(participants);
 }
 
@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
     // body is optional
   }
 
-  const participant = createParticipant(label);
+  const participant = await createParticipant(label);
   const baseUrl =
     process.env.NEXT_PUBLIC_BASE_URL || request.nextUrl.origin;
 

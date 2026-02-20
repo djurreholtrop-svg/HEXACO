@@ -1,23 +1,43 @@
-import Database from "better-sqlite3";
+import initSqlJs, { type Database as SqlJsDatabase } from "sql.js";
+import fs from "fs";
 import path from "path";
 import crypto from "crypto";
 
 const DB_PATH = path.join(process.cwd(), "hexaco.db");
 
-let _db: Database.Database | null = null;
+let _db: SqlJsDatabase | null = null;
+let _initPromise: Promise<SqlJsDatabase> | null = null;
 
-function getDb(): Database.Database {
-  if (!_db) {
-    _db = new Database(DB_PATH);
-    _db.pragma("journal_mode = WAL");
-    _db.pragma("foreign_keys = ON");
-    migrate(_db);
-  }
-  return _db;
+function saveDb(db: SqlJsDatabase) {
+  const data = db.export();
+  fs.writeFileSync(DB_PATH, Buffer.from(data));
 }
 
-function migrate(db: Database.Database) {
-  db.exec(`
+async function getDb(): Promise<SqlJsDatabase> {
+  if (_db) return _db;
+  if (_initPromise) return _initPromise;
+
+  _initPromise = (async () => {
+    const SQL = await initSqlJs();
+
+    if (fs.existsSync(DB_PATH)) {
+      const fileBuffer = fs.readFileSync(DB_PATH);
+      _db = new SQL.Database(fileBuffer);
+    } else {
+      _db = new SQL.Database();
+    }
+
+    _db.run("PRAGMA foreign_keys = ON;");
+    migrate(_db);
+    saveDb(_db);
+    return _db;
+  })();
+
+  return _initPromise;
+}
+
+function migrate(db: SqlJsDatabase) {
+  db.run(`
     CREATE TABLE IF NOT EXISTS participants (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       token TEXT UNIQUE NOT NULL,
@@ -46,16 +66,20 @@ export function generateToken(): string {
   return crypto.randomBytes(16).toString("hex");
 }
 
-export function createParticipant(label?: string): {
+export async function createParticipant(label?: string): Promise<{
   id: number;
   token: string;
-} {
-  const db = getDb();
+}> {
+  const db = await getDb();
   const token = generateToken();
-  const result = db
-    .prepare("INSERT INTO participants (token, label) VALUES (?, ?)")
-    .run(token, label ?? null);
-  return { id: result.lastInsertRowid as number, token };
+  db.run("INSERT INTO participants (token, label) VALUES (?, ?)", [
+    token,
+    label ?? null,
+  ]);
+  const result = db.exec("SELECT last_insert_rowid() as id");
+  const id = result[0].values[0][0] as number;
+  saveDb(db);
+  return { id, token };
 }
 
 export interface HexacoScores {
@@ -69,19 +93,24 @@ export interface HexacoScores {
 
 export type Source = "self" | "ai" | "other";
 
-export function upsertScores(
+export async function upsertScores(
   token: string,
   source: Source,
   scores: HexacoScores
-): boolean {
-  const db = getDb();
-  const participant = db
-    .prepare("SELECT id FROM participants WHERE token = ?")
-    .get(token) as { id: number } | undefined;
+): Promise<boolean> {
+  const db = await getDb();
+  const stmt = db.prepare("SELECT id FROM participants WHERE token = ?");
+  stmt.bind([token]);
 
-  if (!participant) return false;
+  if (!stmt.step()) {
+    stmt.free();
+    return false;
+  }
 
-  db.prepare(
+  const participantId = stmt.get()[0] as number;
+  stmt.free();
+
+  db.run(
     `INSERT INTO scores (participant_id, source, honesty_humility, emotionality, extraversion, agreeableness, conscientiousness, openness)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
      ON CONFLICT(participant_id, source) DO UPDATE SET
@@ -91,18 +120,20 @@ export function upsertScores(
        agreeableness = excluded.agreeableness,
        conscientiousness = excluded.conscientiousness,
        openness = excluded.openness,
-       created_at = datetime('now')`
-  ).run(
-    participant.id,
-    source,
-    scores.honesty_humility,
-    scores.emotionality,
-    scores.extraversion,
-    scores.agreeableness,
-    scores.conscientiousness,
-    scores.openness
+       created_at = datetime('now')`,
+    [
+      participantId,
+      source,
+      scores.honesty_humility,
+      scores.emotionality,
+      scores.extraversion,
+      scores.agreeableness,
+      scores.conscientiousness,
+      scores.openness,
+    ]
   );
 
+  saveDb(db);
   return true;
 }
 
@@ -122,51 +153,77 @@ export interface ParticipantData {
   }[];
 }
 
-export function getParticipantByToken(
+export async function getParticipantByToken(
   token: string
-): ParticipantData | null {
-  const db = getDb();
-  const participant = db
-    .prepare("SELECT id, token, label, created_at FROM participants WHERE token = ?")
-    .get(token) as
-    | { id: number; token: string; label: string | null; created_at: string }
-    | undefined;
+): Promise<ParticipantData | null> {
+  const db = await getDb();
+  const pStmt = db.prepare(
+    "SELECT id, token, label, created_at FROM participants WHERE token = ?"
+  );
+  pStmt.bind([token]);
 
-  if (!participant) return null;
+  if (!pStmt.step()) {
+    pStmt.free();
+    return null;
+  }
 
-  const scores = db
-    .prepare(
-      "SELECT source, honesty_humility, emotionality, extraversion, agreeableness, conscientiousness, openness, created_at FROM scores WHERE participant_id = ? ORDER BY source"
-    )
-    .all(participant.id) as ParticipantData["scores"];
+  const row = pStmt.getAsObject();
+  pStmt.free();
+
+  const participantId = row.id as number;
+
+  const sStmt = db.prepare(
+    "SELECT source, honesty_humility, emotionality, extraversion, agreeableness, conscientiousness, openness, created_at FROM scores WHERE participant_id = ? ORDER BY source"
+  );
+  sStmt.bind([participantId]);
+
+  const scores: ParticipantData["scores"] = [];
+  while (sStmt.step()) {
+    const s = sStmt.getAsObject();
+    scores.push({
+      source: s.source as Source,
+      honesty_humility: s.honesty_humility as number,
+      emotionality: s.emotionality as number,
+      extraversion: s.extraversion as number,
+      agreeableness: s.agreeableness as number,
+      conscientiousness: s.conscientiousness as number,
+      openness: s.openness as number,
+      created_at: s.created_at as string,
+    });
+  }
+  sStmt.free();
 
   return {
-    token: participant.token,
-    label: participant.label,
-    created_at: participant.created_at,
+    token: row.token as string,
+    label: row.label as string | null,
+    created_at: row.created_at as string,
     scores,
   };
 }
 
-export function listParticipants(): {
-  id: number;
-  token: string;
-  label: string | null;
-  created_at: string;
-  score_count: number;
-}[] {
-  const db = getDb();
-  return db
-    .prepare(
-      `SELECT p.id, p.token, p.label, p.created_at,
-              (SELECT COUNT(*) FROM scores s WHERE s.participant_id = p.id) as score_count
-       FROM participants p ORDER BY p.created_at DESC`
-    )
-    .all() as {
+export async function listParticipants(): Promise<
+  {
     id: number;
     token: string;
     label: string | null;
     created_at: string;
     score_count: number;
-  }[];
+  }[]
+> {
+  const db = await getDb();
+  const results = db.exec(
+    `SELECT p.id, p.token, p.label, p.created_at,
+            (SELECT COUNT(*) FROM scores s WHERE s.participant_id = p.id) as score_count
+     FROM participants p ORDER BY p.created_at DESC`
+  );
+
+  if (!results.length || !results[0].values.length) return [];
+
+  return results[0].values.map((row) => ({
+    id: row[0] as number,
+    token: row[1] as string,
+    label: row[2] as string | null,
+    created_at: row[3] as string,
+    score_count: row[4] as number,
+  }));
 }

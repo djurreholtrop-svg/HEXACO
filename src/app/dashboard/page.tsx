@@ -13,7 +13,7 @@ export default async function DashboardPage({ searchParams }: Props) {
     redirect("/");
   }
 
-  const data = getParticipantByToken(token);
+  const data = await getParticipantByToken(token);
 
   if (!data) {
     return (
