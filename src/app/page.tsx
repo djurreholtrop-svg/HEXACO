@@ -106,6 +106,52 @@ export default function HomePage() {
         </div>
       </section>
 
+      <section className="max-w-3xl mx-auto">
+        <h2 className="text-xl font-semibold mb-6 text-center">
+          Learn more
+        </h2>
+        <div className="grid gap-6 sm:grid-cols-3">
+          <a
+            href="https://hexaco.org"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="rounded-lg border bg-white p-6 hover:border-gray-400 transition-colors group"
+          >
+            <h3 className="font-medium mb-2 group-hover:text-blue-600">
+              HEXACO.org
+            </h3>
+            <p className="text-sm text-gray-500">
+              Visit hexaco.org for background information, published materials,
+              and resources on the HEXACO model of personality.
+            </p>
+          </a>
+          <a
+            href="/participate"
+            className="rounded-lg border bg-white p-6 hover:border-gray-400 transition-colors group"
+          >
+            <h3 className="font-medium mb-2 group-hover:text-blue-600">
+              Participate
+            </h3>
+            <p className="text-sm text-gray-500">
+              Interested in contributing to our research? Learn what
+              participation involves and how to sign up.
+            </p>
+          </a>
+          <a
+            href="/research"
+            className="rounded-lg border bg-white p-6 hover:border-gray-400 transition-colors group"
+          >
+            <h3 className="font-medium mb-2 group-hover:text-blue-600">
+              Research Team &amp; Ethics
+            </h3>
+            <p className="text-sm text-gray-500">
+              Meet the research team behind this project and read about our
+              ethical guidelines and approvals.
+            </p>
+          </a>
+        </div>
+      </section>
+
       <section className="text-center text-sm text-gray-400">
         <p>
           Participants: use the unique link provided to you to access your
