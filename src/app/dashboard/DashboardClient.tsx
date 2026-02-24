@@ -1,5 +1,6 @@
 "use client";
 
+import AgreementCards from "@/components/AgreementCards";
 import HexacoRadarChart from "@/components/HexacoRadarChart";
 import ScoreTable from "@/components/ScoreTable";
 import StatusCards from "@/components/StatusCards";
@@ -60,6 +61,8 @@ export default function DashboardClient({
               <HexacoRadarChart scoreSets={scoreSets} />
             </div>
           </section>
+
+          <AgreementCards scoreSets={scoreSets} />
 
           <section>
             <h2 className="text-lg font-semibold mb-4">Score Details</h2>

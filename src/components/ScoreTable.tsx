@@ -23,7 +23,7 @@ const SOURCE_LABELS: Record<string, string> = {
 };
 
 const SOURCE_COLORS: Record<string, string> = {
-  self: "bg-blue-100 text-blue-800",
+  self: "bg-gray-200 text-black",
   ai: "bg-violet-100 text-violet-800",
   other: "bg-amber-100 text-amber-800",
 };

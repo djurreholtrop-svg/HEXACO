@@ -28,7 +28,7 @@ interface ScoreSet {
 }
 
 const SOURCE_COLORS: Record<string, string> = {
-  self: "#3b82f6",
+  self: "#000000",
   ai: "#8b5cf6",
   other: "#f59e0b",
 };
