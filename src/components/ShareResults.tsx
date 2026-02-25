@@ -4,13 +4,9 @@ import { useState } from "react";
 
 const SHARE_TEXT = "Check out my HEXACO personality profile!";
 
-function getShareUrl(): string {
-  return typeof window !== "undefined" ? window.location.href : "";
-}
-
 interface ShareTarget {
   name: string;
-  getUrl: (dashboardUrl: string, text: string) => string;
+  buildUrl: (dashboardUrl: string, text: string) => string;
   color: string;
   hoverColor: string;
 }
@@ -18,28 +14,28 @@ interface ShareTarget {
 const TARGETS: ShareTarget[] = [
   {
     name: "WhatsApp",
-    getUrl: (url, text) =>
-      `https://wa.me/?text=${encodeURIComponent(`${text} ${url}`)}`,
+    buildUrl: (url, text) =>
+      `https://api.whatsapp.com/send?text=${encodeURIComponent(`${text} ${url}`)}`,
     color: "bg-green-600",
     hoverColor: "hover:bg-green-700",
   },
   {
     name: "Signal",
-    getUrl: (url, text) =>
+    buildUrl: (url, text) =>
       `https://signal.me/#p/?text=${encodeURIComponent(`${text} ${url}`)}`,
     color: "bg-blue-600",
     hoverColor: "hover:bg-blue-700",
   },
   {
     name: "Facebook",
-    getUrl: (url) =>
+    buildUrl: (url) =>
       `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`,
     color: "bg-blue-700",
     hoverColor: "hover:bg-blue-800",
   },
   {
     name: "LinkedIn",
-    getUrl: (url) =>
+    buildUrl: (url) =>
       `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`,
     color: "bg-blue-800",
     hoverColor: "hover:bg-blue-900",
@@ -49,8 +45,14 @@ const TARGETS: ShareTarget[] = [
 export default function ShareResults() {
   const [copied, setCopied] = useState(false);
 
+  function handleShare(target: ShareTarget) {
+    const url = window.location.href;
+    window.open(target.buildUrl(url, SHARE_TEXT), "_blank", "noopener,noreferrer");
+  }
+
   function handleCopyLink() {
-    navigator.clipboard.writeText(getShareUrl()).then(() => {
+    const url = window.location.href;
+    navigator.clipboard.writeText(url).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     });
@@ -65,15 +67,13 @@ export default function ShareResults() {
         </p>
         <div className="flex flex-wrap gap-2">
           {TARGETS.map((target) => (
-            <a
+            <button
               key={target.name}
-              href={target.getUrl(getShareUrl(), SHARE_TEXT)}
-              target="_blank"
-              rel="noopener noreferrer"
+              onClick={() => handleShare(target)}
               className={`inline-flex items-center rounded-md px-3 py-2 text-sm font-medium text-white ${target.color} ${target.hoverColor} transition-colors`}
             >
               {target.name}
-            </a>
+            </button>
           ))}
           <button
             onClick={handleCopyLink}
