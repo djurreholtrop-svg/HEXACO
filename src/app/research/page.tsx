@@ -20,47 +20,56 @@ export default function ResearchPage() {
             </div>
             <div>
               <p className="font-medium">Djurre Holtrop</p>
-              <p className="text-sm text-gray-500">Tilburg University</p>
-              <div className="mt-1 flex flex-col gap-1 text-sm">
+              <p className="text-sm text-gray-500">
+                Assistant Professor, Department of Social Psychology, Tilburg
+                University
+              </p>
+              <div className="mt-2 flex flex-col gap-1 text-sm">
                 <a
                   href="https://www.tilburguniversity.edu/staff/d-j-holtrop"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-blue-600 hover:text-blue-800 hover:underline"
                 >
-                  {/* TODO: Replace with actual profile URL */}
                   University profile
+                </a>
+                <a
+                  href="https://www.linkedin.com/in/djurre-holtrop-b4870a11/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:text-blue-800 hover:underline"
+                >
+                  LinkedIn
                 </a>
                 <a
                   href="mailto:d.j.holtrop@tilburguniversity.edu"
                   className="text-blue-600 hover:text-blue-800 hover:underline"
                 >
-                  {/* TODO: Replace with actual email */}
                   d.j.holtrop@tilburguniversity.edu
                 </a>
               </div>
             </div>
           </div>
         </div>
+        <p className="text-sm text-gray-600 pt-2">
+          Have any questions about this research? Feel free to reach out — I am
+          always happy to hear from you!
+        </p>
       </section>
 
       <section className="rounded-lg border bg-white p-6 space-y-4">
         <h2 className="text-xl font-semibold">Ethics</h2>
         <div className="space-y-3 text-sm text-gray-600">
           <p>
-            This research is conducted in accordance with the ethical guidelines
-            of Tilburg University and the relevant institutional review board.
+            This research has been approved by the Ethical Review Board of
+            Tilburg University&apos;s School of Behavioral and Social Sciences
+            (TSB_RP2449_27).
           </p>
           <p>
             Participation in this study is entirely voluntary. All data is
             collected and processed in compliance with the General Data
             Protection Regulation (GDPR). Participants may withdraw from the
             study at any time without consequence.
-          </p>
-          <p>
-            {/* TODO: Add ethics approval number and further details */}
-            Further details on the ethics approval and data handling procedures
-            will be provided here.
           </p>
         </div>
       </section>

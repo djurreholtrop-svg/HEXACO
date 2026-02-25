@@ -43,6 +43,15 @@ function getScoresArray(set: ScoreSet): number[] {
   return DIMENSION_KEYS.map((key) => set.scores[key]);
 }
 
+function getCorrelationLabel(r: number): { text: string; color: string } {
+  const abs = Math.abs(r);
+  if (abs <= 0.10) return { text: "very low", color: "text-red-500" };
+  if (abs <= 0.20) return { text: "low", color: "text-orange-500" };
+  if (abs <= 0.40) return { text: "medium", color: "text-yellow-600" };
+  if (abs <= 0.60) return { text: "high", color: "text-green-500" };
+  return { text: "very high", color: "text-green-600" };
+}
+
 const PAIRS: {
   sourceA: string;
   sourceB: string;
@@ -84,9 +93,14 @@ export default function AgreementCards({ scoreSets }: Props) {
               {result.label}
             </p>
             {result.r !== null ? (
-              <p className="text-2xl font-bold tabular-nums">
-                r = {result.r.toFixed(2)}
-              </p>
+              <>
+                <p className="text-2xl font-bold tabular-nums">
+                  r = {result.r.toFixed(2)}
+                </p>
+                <p className={`text-sm font-medium mt-1 ${getCorrelationLabel(result.r).color}`}>
+                  ({getCorrelationLabel(result.r).text})
+                </p>
+              </>
             ) : (
               <p className="text-sm text-gray-400">Awaiting data</p>
             )}

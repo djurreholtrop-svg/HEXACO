@@ -3,6 +3,7 @@
 import AgreementCards from "@/components/AgreementCards";
 import HexacoRadarChart from "@/components/HexacoRadarChart";
 import ScoreTable from "@/components/ScoreTable";
+import ShareResults from "@/components/ShareResults";
 import StatusCards from "@/components/StatusCards";
 
 interface ScoreSet {
@@ -70,6 +71,8 @@ export default function DashboardClient({
               <ScoreTable rows={scoreSets} />
             </div>
           </section>
+
+          <ShareResults />
         </>
       )}
     </div>
