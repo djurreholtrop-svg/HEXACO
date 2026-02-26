@@ -82,7 +82,15 @@ export default function AgreementCards({ scoreSets }: Props) {
 
   return (
     <section>
-      <h2 className="text-lg font-semibold mb-4">Profile Agreement</h2>
+      <h2 className="text-lg font-semibold mb-2">Profile Agreement</h2>
+      <p className="text-sm text-gray-500 mb-4">
+        These correlations show the agreement between your own assessment, your
+        AI agent, and the person who knows you well. The number ranges
+        from &minus;1 (negative agreement) to 1 (perfect agreement). Negative
+        agreement signals that the other has a reversed idea of your
+        personality. A correlation of about .40 is generally considered
+        reasonable agreement.
+      </p>
       <div className="grid gap-4 sm:grid-cols-3">
         {results.map((result) => (
           <div
