@@ -46,10 +46,19 @@ export default function ParticipatePage() {
       <section className="rounded-lg border bg-white p-6 space-y-4">
         <h2 className="text-xl font-semibold">How to sign up</h2>
         <p className="text-sm text-gray-600">
-          {/* TODO: Replace with actual sign-up link and instructions */}
-          Details on how to sign up will be available here soon. Please check
-          back later or contact the research team for more information.
+          Ready to participate? Click the button below to start the
+          questionnaire. It will take approximately 10 minutes to complete.
         </p>
+        <div className="pt-2">
+          <a
+            href="https://tilburgss.co1.qualtrics.com/jfe/form/SV_9Kp2B62IUcnP7Wm?Source=Website"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block rounded-lg bg-blue-600 px-6 py-3 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
+          >
+            Start the questionnaire
+          </a>
+        </div>
       </section>
 
       <div className="text-center">
