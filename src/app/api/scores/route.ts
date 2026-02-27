@@ -84,6 +84,29 @@ function validateScore(value: unknown): number | null {
 }
 
 /**
+ * Parse the request body, accepting both JSON and form-encoded data.
+ * Qualtrics Web Service sends body parameters as
+ * application/x-www-form-urlencoded by default.
+ */
+async function parseRequestBody(
+  request: NextRequest
+): Promise<Record<string, unknown>> {
+  const contentType = request.headers.get("content-type") ?? "";
+
+  if (contentType.includes("application/x-www-form-urlencoded")) {
+    const formData = await request.formData();
+    const obj: Record<string, unknown> = {};
+    formData.forEach((value, key) => {
+      obj[key] = value;
+    });
+    return obj;
+  }
+
+  // Default: try JSON
+  return (await request.json()) as Record<string, unknown>;
+}
+
+/**
  * POST /api/scores
  *
  * Receives HEXACO-60 dimension scores from Qualtrics.
@@ -91,7 +114,7 @@ function validateScore(value: unknown): number | null {
  * Headers:
  *   X-API-Key: <API_SECRET_KEY>
  *
- * Accepts two body formats:
+ * Accepts body as JSON or application/x-www-form-urlencoded.
  *
  * Standard format:
  * {
@@ -126,10 +149,10 @@ export async function POST(request: NextRequest) {
 
   let body: Record<string, unknown>;
   try {
-    body = await request.json();
+    body = await parseRequestBody(request);
   } catch {
     return NextResponse.json(
-      { error: "Invalid JSON body" },
+      { error: "Invalid request body" },
       { status: 400 }
     );
   }
