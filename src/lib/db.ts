@@ -73,11 +73,25 @@ export async function upsertScores(
   scores: HexacoScores
 ): Promise<boolean> {
   const sql = getSQL();
-  const participants = await sql`
+  let participants = await sql`
     SELECT id FROM participants WHERE token = ${token}
   `;
 
-  if (participants.length === 0) return false;
+  // Auto-create participant if the token doesn't exist yet
+  if (participants.length === 0) {
+    participants = await sql`
+      INSERT INTO participants (token)
+      VALUES (${token})
+      ON CONFLICT (token) DO NOTHING
+      RETURNING id
+    `;
+    // If ON CONFLICT hit (race condition), fetch the existing row
+    if (participants.length === 0) {
+      participants = await sql`
+        SELECT id FROM participants WHERE token = ${token}
+      `;
+    }
+  }
 
   const participantId = participants[0].id;
 
