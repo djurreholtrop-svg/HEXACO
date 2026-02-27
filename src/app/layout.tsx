@@ -21,11 +21,14 @@ export default function RootLayout({
               HEXACO Dashboard
             </a>
             <nav className="flex gap-4 text-sm text-gray-500">
+              <a href="/" className="hover:text-gray-900">
+                HEXACO
+              </a>
               <a href="/participate" className="hover:text-gray-900">
-                Participate
+                Taking the Research
               </a>
               <a href="/research" className="hover:text-gray-900">
-                Research &amp; Ethics
+                About the Research
               </a>
             </nav>
           </div>
