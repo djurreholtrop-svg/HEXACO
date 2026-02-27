@@ -24,8 +24,7 @@ export default function HomePage() {
             </div>
             <h3 className="font-medium mb-1">Self-report</h3>
             <p className="text-sm text-gray-500">
-              You complete the HEXACO-60 questionnaire about yourself via
-              Qualtrics.
+              You complete the HEXACO-60 questionnaire about yourself.
             </p>
           </div>
           <div className="rounded-lg border bg-white p-6 text-center">
@@ -35,7 +34,7 @@ export default function HomePage() {
             <h3 className="font-medium mb-1">AI Agent</h3>
             <p className="text-sm text-gray-500">
               You direct your ChatGPT AI agent to complete the HEXACO-60 about
-              you via Qualtrics.
+              you.
             </p>
           </div>
           <div className="rounded-lg border bg-white p-6 text-center">
@@ -44,8 +43,7 @@ export default function HomePage() {
             </div>
             <h3 className="font-medium mb-1">Close Other</h3>
             <p className="text-sm text-gray-500">
-              You invite someone who knows you well to rate you on the HEXACO-60
-              via Qualtrics.
+              You invite someone who knows you well to rate you on the HEXACO-60.
             </p>
           </div>
         </div>
