@@ -3,8 +3,8 @@ const SOURCES = [
     key: "self",
     label: "Self-report",
     description: "Your own HEXACO-60 responses",
-    color: "border-blue-400 bg-blue-50",
-    dot: "bg-blue-500",
+    color: "border-gray-700 bg-gray-100",
+    dot: "bg-black",
   },
   {
     key: "ai",

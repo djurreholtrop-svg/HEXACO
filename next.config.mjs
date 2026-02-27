@@ -1,7 +1,24 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {
-    serverComponentsExternalPackages: ["better-sqlite3"],
+    serverComponentsExternalPackages: ["sql.js"],
+  },
+  async headers() {
+    return [
+      {
+        source: "/dashboard",
+        headers: [
+          {
+            key: "X-Frame-Options",
+            value: "ALLOWALL",
+          },
+          {
+            key: "Content-Security-Policy",
+            value: "frame-ancestors *",
+          },
+        ],
+      },
+    ];
   },
 };
 

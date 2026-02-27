@@ -20,6 +20,17 @@ export default function RootLayout({
             <a href="/" className="text-xl font-bold tracking-tight">
               HEXACO Dashboard
             </a>
+            <nav className="flex gap-4 text-sm text-gray-500">
+              <a href="/" className="hover:text-gray-900">
+                HEXACO
+              </a>
+              <a href="/participate" className="hover:text-gray-900">
+                Taking the Research
+              </a>
+              <a href="/research" className="hover:text-gray-900">
+                About the Research
+              </a>
+            </nav>
           </div>
         </header>
         <main className="mx-auto max-w-5xl px-4 py-8">{children}</main>
