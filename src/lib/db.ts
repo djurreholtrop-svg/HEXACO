@@ -1,53 +1,30 @@
-import initSqlJs, { type Database as SqlJsDatabase } from "sql.js";
-import fs from "fs";
-import path from "path";
+import { neon } from "@neondatabase/serverless";
 import crypto from "crypto";
 
-const DB_PATH = path.join(process.cwd(), "hexaco.db");
-
-let _db: SqlJsDatabase | null = null;
-let _initPromise: Promise<SqlJsDatabase> | null = null;
-
-function saveDb(db: SqlJsDatabase) {
-  const data = db.export();
-  fs.writeFileSync(DB_PATH, Buffer.from(data));
+function getSQL() {
+  const databaseUrl = process.env.POSTGRES_URL || process.env.DATABASE_URL;
+  if (!databaseUrl) {
+    throw new Error(
+      "Missing POSTGRES_URL or DATABASE_URL environment variable"
+    );
+  }
+  return neon(databaseUrl);
 }
 
-async function getDb(): Promise<SqlJsDatabase> {
-  if (_db) return _db;
-  if (_initPromise) return _initPromise;
-
-  _initPromise = (async () => {
-    const SQL = await initSqlJs();
-
-    if (fs.existsSync(DB_PATH)) {
-      const fileBuffer = fs.readFileSync(DB_PATH);
-      _db = new SQL.Database(fileBuffer);
-    } else {
-      _db = new SQL.Database();
-    }
-
-    _db.run("PRAGMA foreign_keys = ON;");
-    migrate(_db);
-    saveDb(_db);
-    return _db;
-  })();
-
-  return _initPromise;
-}
-
-function migrate(db: SqlJsDatabase) {
-  db.run(`
+export async function migrate() {
+  const sql = getSQL();
+  await sql`
     CREATE TABLE IF NOT EXISTS participants (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id SERIAL PRIMARY KEY,
       token TEXT UNIQUE NOT NULL,
       label TEXT,
-      created_at TEXT DEFAULT (datetime('now'))
-    );
-
+      created_at TIMESTAMP DEFAULT NOW()
+    )
+  `;
+  await sql`
     CREATE TABLE IF NOT EXISTS scores (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      participant_id INTEGER NOT NULL,
+      id SERIAL PRIMARY KEY,
+      participant_id INTEGER NOT NULL REFERENCES participants(id),
       source TEXT NOT NULL CHECK(source IN ('self', 'ai', 'other')),
       honesty_humility REAL NOT NULL,
       emotionality REAL NOT NULL,
@@ -55,11 +32,10 @@ function migrate(db: SqlJsDatabase) {
       agreeableness REAL NOT NULL,
       conscientiousness REAL NOT NULL,
       openness REAL NOT NULL,
-      created_at TEXT DEFAULT (datetime('now')),
-      FOREIGN KEY (participant_id) REFERENCES participants(id),
+      created_at TIMESTAMP DEFAULT NOW(),
       UNIQUE(participant_id, source)
-    );
-  `);
+    )
+  `;
 }
 
 export function generateToken(): string {
@@ -70,16 +46,14 @@ export async function createParticipant(label?: string): Promise<{
   id: number;
   token: string;
 }> {
-  const db = await getDb();
+  const sql = getSQL();
   const token = generateToken();
-  db.run("INSERT INTO participants (token, label) VALUES (?, ?)", [
-    token,
-    label ?? null,
-  ]);
-  const result = db.exec("SELECT last_insert_rowid() as id");
-  const id = result[0].values[0][0] as number;
-  saveDb(db);
-  return { id, token };
+  const rows = await sql`
+    INSERT INTO participants (token, label)
+    VALUES (${token}, ${label ?? null})
+    RETURNING id
+  `;
+  return { id: rows[0].id, token };
 }
 
 export interface HexacoScores {
@@ -98,42 +72,28 @@ export async function upsertScores(
   source: Source,
   scores: HexacoScores
 ): Promise<boolean> {
-  const db = await getDb();
-  const stmt = db.prepare("SELECT id FROM participants WHERE token = ?");
-  stmt.bind([token]);
+  const sql = getSQL();
+  const participants = await sql`
+    SELECT id FROM participants WHERE token = ${token}
+  `;
 
-  if (!stmt.step()) {
-    stmt.free();
-    return false;
-  }
+  if (participants.length === 0) return false;
 
-  const participantId = stmt.get()[0] as number;
-  stmt.free();
+  const participantId = participants[0].id;
 
-  db.run(
-    `INSERT INTO scores (participant_id, source, honesty_humility, emotionality, extraversion, agreeableness, conscientiousness, openness)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-     ON CONFLICT(participant_id, source) DO UPDATE SET
-       honesty_humility = excluded.honesty_humility,
-       emotionality = excluded.emotionality,
-       extraversion = excluded.extraversion,
-       agreeableness = excluded.agreeableness,
-       conscientiousness = excluded.conscientiousness,
-       openness = excluded.openness,
-       created_at = datetime('now')`,
-    [
-      participantId,
-      source,
-      scores.honesty_humility,
-      scores.emotionality,
-      scores.extraversion,
-      scores.agreeableness,
-      scores.conscientiousness,
-      scores.openness,
-    ]
-  );
+  await sql`
+    INSERT INTO scores (participant_id, source, honesty_humility, emotionality, extraversion, agreeableness, conscientiousness, openness)
+    VALUES (${participantId}, ${source}, ${scores.honesty_humility}, ${scores.emotionality}, ${scores.extraversion}, ${scores.agreeableness}, ${scores.conscientiousness}, ${scores.openness})
+    ON CONFLICT(participant_id, source) DO UPDATE SET
+      honesty_humility = EXCLUDED.honesty_humility,
+      emotionality = EXCLUDED.emotionality,
+      extraversion = EXCLUDED.extraversion,
+      agreeableness = EXCLUDED.agreeableness,
+      conscientiousness = EXCLUDED.conscientiousness,
+      openness = EXCLUDED.openness,
+      created_at = NOW()
+  `;
 
-  saveDb(db);
   return true;
 }
 
@@ -156,48 +116,36 @@ export interface ParticipantData {
 export async function getParticipantByToken(
   token: string
 ): Promise<ParticipantData | null> {
-  const db = await getDb();
-  const pStmt = db.prepare(
-    "SELECT id, token, label, created_at FROM participants WHERE token = ?"
-  );
-  pStmt.bind([token]);
+  const sql = getSQL();
+  const participants = await sql`
+    SELECT id, token, label, created_at FROM participants WHERE token = ${token}
+  `;
 
-  if (!pStmt.step()) {
-    pStmt.free();
-    return null;
-  }
+  if (participants.length === 0) return null;
 
-  const row = pStmt.getAsObject();
-  pStmt.free();
+  const participant = participants[0];
 
-  const participantId = row.id as number;
-
-  const sStmt = db.prepare(
-    "SELECT source, honesty_humility, emotionality, extraversion, agreeableness, conscientiousness, openness, created_at FROM scores WHERE participant_id = ? ORDER BY source"
-  );
-  sStmt.bind([participantId]);
-
-  const scores: ParticipantData["scores"] = [];
-  while (sStmt.step()) {
-    const s = sStmt.getAsObject();
-    scores.push({
-      source: s.source as Source,
-      honesty_humility: s.honesty_humility as number,
-      emotionality: s.emotionality as number,
-      extraversion: s.extraversion as number,
-      agreeableness: s.agreeableness as number,
-      conscientiousness: s.conscientiousness as number,
-      openness: s.openness as number,
-      created_at: s.created_at as string,
-    });
-  }
-  sStmt.free();
+  const scores = await sql`
+    SELECT source, honesty_humility, emotionality, extraversion, agreeableness, conscientiousness, openness, created_at
+    FROM scores
+    WHERE participant_id = ${participant.id}
+    ORDER BY source
+  `;
 
   return {
-    token: row.token as string,
-    label: row.label as string | null,
-    created_at: row.created_at as string,
-    scores,
+    token: participant.token,
+    label: participant.label,
+    created_at: participant.created_at,
+    scores: scores.map((s) => ({
+      source: s.source as Source,
+      honesty_humility: Number(s.honesty_humility),
+      emotionality: Number(s.emotionality),
+      extraversion: Number(s.extraversion),
+      agreeableness: Number(s.agreeableness),
+      conscientiousness: Number(s.conscientiousness),
+      openness: Number(s.openness),
+      created_at: s.created_at,
+    })),
   };
 }
 
@@ -210,20 +158,19 @@ export async function listParticipants(): Promise<
     score_count: number;
   }[]
 > {
-  const db = await getDb();
-  const results = db.exec(
-    `SELECT p.id, p.token, p.label, p.created_at,
-            (SELECT COUNT(*) FROM scores s WHERE s.participant_id = p.id) as score_count
-     FROM participants p ORDER BY p.created_at DESC`
-  );
+  const sql = getSQL();
+  const rows = await sql`
+    SELECT p.id, p.token, p.label, p.created_at,
+           (SELECT COUNT(*) FROM scores s WHERE s.participant_id = p.id) as score_count
+    FROM participants p
+    ORDER BY p.created_at DESC
+  `;
 
-  if (!results.length || !results[0].values.length) return [];
-
-  return results[0].values.map((row) => ({
-    id: row[0] as number,
-    token: row[1] as string,
-    label: row[2] as string | null,
-    created_at: row[3] as string,
-    score_count: row[4] as number,
+  return rows.map((row) => ({
+    id: row.id,
+    token: row.token,
+    label: row.label,
+    created_at: row.created_at,
+    score_count: Number(row.score_count),
   }));
 }

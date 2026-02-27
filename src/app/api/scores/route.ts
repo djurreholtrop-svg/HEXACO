@@ -60,7 +60,7 @@ function parseQualtricsBody(
 
   if (suffixes.size !== 1) return null; // Mixed suffixes — ambiguous
 
-  const suffix = [...suffixes][0];
+  const suffix = Array.from(suffixes)[0];
   const source = QUALTRICS_SUFFIX_TO_SOURCE[suffix];
   if (!source) return null;
 
