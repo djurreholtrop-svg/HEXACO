@@ -40,6 +40,11 @@ const QUALTRICS_SUFFIXES = Object.keys(QUALTRICS_SUFFIX_TO_SOURCE);
 /**
  * Detect Qualtrics format and extract source + scores.
  * Returns null if the body is not in Qualtrics format.
+ *
+ * Qualtrics Web Service often sends ALL embedded data fields at once, so the
+ * body may contain a mix of suffixes (e.g. both _S and _A keys). When that
+ * happens we pick the suffix whose keys carry the most non-empty values,
+ * which corresponds to the source that was just filled in.
  */
 function parseQualtricsBody(
   body: Record<string, unknown>
@@ -53,20 +58,52 @@ function parseQualtricsBody(
 
   if (qualtricsKeys.length === 0) return null;
 
-  // Determine the source from the suffix — all keys must share the same suffix
-  const suffixes = new Set(
-    qualtricsKeys.map((key) => key.slice(-2))
-  );
+  // Group keys by suffix and count how many have non-empty, valid-looking values
+  const suffixGroups: Record<string, string[]> = {};
+  for (const key of qualtricsKeys) {
+    const suffix = key.slice(-2);
+    if (!suffixGroups[suffix]) suffixGroups[suffix] = [];
+    suffixGroups[suffix].push(key);
+  }
 
-  if (suffixes.size !== 1) return null; // Mixed suffixes — ambiguous
+  // If an explicit "source" field is provided, prefer the matching suffix
+  const explicitSource = typeof body.source === "string" ? body.source.trim() : null;
+  const SOURCE_TO_SUFFIX: Record<string, string> = { self: "_S", ai: "_A", other: "_O" };
+  let bestSuffix: string | null = null;
 
-  const suffix = Array.from(suffixes)[0];
-  const source = QUALTRICS_SUFFIX_TO_SOURCE[suffix];
+  if (explicitSource && SOURCE_TO_SUFFIX[explicitSource]) {
+    const preferred = SOURCE_TO_SUFFIX[explicitSource];
+    if (suffixGroups[preferred]) {
+      bestSuffix = preferred;
+    }
+  }
+
+  // Otherwise pick the suffix with the most valid numeric scores (1-5).
+  // Qualtrics sends all embedded data, so previously-filled _S fields may
+  // also have values. Counting valid scores (not just non-empty) helps
+  // distinguish freshly computed values from empty/zero placeholders.
+  if (!bestSuffix) {
+    let bestCount = -1;
+    for (const [suffix, keys] of Object.entries(suffixGroups)) {
+      const validCount = keys.filter((k) => {
+        const n = Number(body[k]);
+        return !isNaN(n) && n >= 1 && n <= 5;
+      }).length;
+      if (validCount > bestCount) {
+        bestCount = validCount;
+        bestSuffix = suffix;
+      }
+    }
+  }
+
+  if (!bestSuffix) return null;
+
+  const source = QUALTRICS_SUFFIX_TO_SOURCE[bestSuffix];
   if (!source) return null;
 
-  // Map Qualtrics keys to standard dimension keys
+  // Map Qualtrics keys to standard dimension keys (only for the chosen suffix)
   const scores: Record<string, unknown> = {};
-  for (const key of qualtricsKeys) {
+  for (const key of suffixGroups[bestSuffix]) {
     const prefix = key.slice(0, -2);
     const dimension = QUALTRICS_PREFIX_TO_DIMENSION[prefix];
     if (dimension) {
