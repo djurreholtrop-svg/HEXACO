@@ -107,6 +107,35 @@ async function parseRequestBody(
 }
 
 /**
+ * Resolve the participant token from the request.
+ *
+ * Checks (in order):
+ *   1. body.token  (exact case)
+ *   2. body.Token  (capital-T — common Qualtrics variant)
+ *   3. ?token= query parameter
+ *
+ * Returns the trimmed token string, or null if not found.
+ */
+function resolveToken(
+  body: Record<string, unknown>,
+  request: NextRequest
+): string | null {
+  // Check body fields (case-insensitive for common variants)
+  for (const key of Object.keys(body)) {
+    if (key.toLowerCase() === "token") {
+      const val = body[key];
+      if (typeof val === "string" && val.trim()) return val.trim();
+    }
+  }
+
+  // Fallback: check URL query parameter
+  const queryToken = request.nextUrl.searchParams.get("token");
+  if (queryToken && queryToken.trim()) return queryToken.trim();
+
+  return null;
+}
+
+/**
  * POST /api/scores
  *
  * Receives HEXACO-60 dimension scores from Qualtrics.
@@ -136,7 +165,8 @@ async function parseRequestBody(
  * }
  * Suffixes: _S = self, _A = ai, _O = other
  *
- * All dimension scores should be between 1.0 and 5.0.
+ * The token can be provided in the body (as "token" or "Token") or as a
+ * ?token= query parameter. All dimension scores should be between 1.0 and 5.0.
  */
 export async function POST(request: NextRequest) {
   const apiKey = process.env.API_SECRET_KEY;
@@ -157,9 +187,15 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const { token } = body;
+  // Log incoming payload for debugging Qualtrics integration
+  console.log("[POST /api/scores] content-type:", request.headers.get("content-type"));
+  console.log("[POST /api/scores] query params:", Object.fromEntries(request.nextUrl.searchParams));
+  console.log("[POST /api/scores] body keys:", Object.keys(body));
+  console.log("[POST /api/scores] body:", JSON.stringify(body));
 
-  if (typeof token !== "string" || !token.trim()) {
+  const token = resolveToken(body, request);
+
+  if (!token) {
     return NextResponse.json(
       { error: "Missing or invalid 'token'" },
       { status: 400 }
