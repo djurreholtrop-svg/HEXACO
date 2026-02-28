@@ -2,6 +2,8 @@ import { getParticipantByToken } from "@/lib/db";
 import { redirect } from "next/navigation";
 import DashboardClient from "./DashboardClient";
 
+export const dynamic = "force-dynamic";
+
 interface Props {
   searchParams: Promise<{ token?: string }>;
 }
