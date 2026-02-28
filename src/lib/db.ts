@@ -8,7 +8,7 @@ function getSQL() {
       "Missing POSTGRES_URL or DATABASE_URL environment variable"
     );
   }
-  return neon(databaseUrl);
+  return neon(databaseUrl, { fetchOptions: { cache: "no-store" } });
 }
 
 export async function migrate() {
