@@ -62,6 +62,26 @@ export default async function DashboardPage({ searchParams }: Props) {
       },
     }));
 
+  // Extract self-report stanine scores (if available)
+  const selfRow = data.scores.find((s) => s.source === "self");
+  const selfStanineScores =
+    selfRow &&
+    selfRow.honesty_humility_stanine != null &&
+    selfRow.emotionality_stanine != null &&
+    selfRow.extraversion_stanine != null &&
+    selfRow.agreeableness_stanine != null &&
+    selfRow.conscientiousness_stanine != null &&
+    selfRow.openness_stanine != null
+      ? {
+          honesty_humility: selfRow.honesty_humility_stanine,
+          emotionality: selfRow.emotionality_stanine,
+          extraversion: selfRow.extraversion_stanine,
+          agreeableness: selfRow.agreeableness_stanine,
+          conscientiousness: selfRow.conscientiousness_stanine,
+          openness: selfRow.openness_stanine,
+        }
+      : null;
+
   const completedSources = data.scores
     .filter((s) => allowedSources.includes(s.source))
     .map((s) => s.source);
@@ -70,6 +90,7 @@ export default async function DashboardPage({ searchParams }: Props) {
     <DashboardClient
       label={data.label}
       scoreSets={scoreSets}
+      selfStanineScores={selfStanineScores}
       completedSources={completedSources}
       view={view}
     />

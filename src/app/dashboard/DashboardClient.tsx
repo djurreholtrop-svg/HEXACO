@@ -20,9 +20,19 @@ interface ScoreSet {
 
 type DashboardView = "self-ai" | "self-other" | "full";
 
+interface StanineScores {
+  honesty_humility: number;
+  emotionality: number;
+  extraversion: number;
+  agreeableness: number;
+  conscientiousness: number;
+  openness: number;
+}
+
 interface Props {
   label: string | null;
   scoreSets: ScoreSet[];
+  selfStanineScores: StanineScores | null;
   completedSources: string[];
   view: DashboardView;
 }
@@ -36,6 +46,7 @@ const VIEW_SOURCES: Record<DashboardView, string[]> = {
 export default function DashboardClient({
   label,
   scoreSets,
+  selfStanineScores,
   completedSources,
   view,
 }: Props) {
@@ -48,8 +59,8 @@ export default function DashboardClient({
           {label ? `${label} — Your personality dashboard` : "Your personality dashboard"}
         </h1>
         <p className="mt-1 text-gray-500">
-          HEXACO-60 stanine scores from up to three sources: self-report, AI
-          agent, and a close other.
+          HEXACO-60 scores from up to three sources: self-report, AI agent,
+          and a close other.
         </p>
       </div>
 
@@ -74,7 +85,7 @@ export default function DashboardClient({
               Personality Radar Chart
             </h2>
             <div className="rounded-lg border bg-white p-4">
-              <HexacoRadarChart scoreSets={scoreSets} />
+              <HexacoRadarChart scoreSets={scoreSets} domain={[1, 5]} />
             </div>
           </section>
 
@@ -89,9 +100,25 @@ export default function DashboardClient({
             </div>
           </section>
 
+          {selfStanineScores && (
+            <section>
+              <h2 className="text-lg font-semibold mb-4">
+                Your scores compared to the general population
+              </h2>
+              <div className="rounded-lg border bg-white p-4">
+                <HexacoRadarChart
+                  scoreSets={[
+                    { source: "self", scores: selfStanineScores },
+                  ]}
+                  domain={[1, 9]}
+                />
+              </div>
+            </section>
+          )}
+
           <section>
             <h2 className="text-lg font-semibold mb-4">
-              What do your scores mean?
+              What do your stanine scores mean?
             </h2>
             <div className="rounded-lg border bg-white p-6">
               <p className="text-sm text-gray-600 mb-3">
