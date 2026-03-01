@@ -4,16 +4,35 @@ import DashboardClient from "./DashboardClient";
 
 export const dynamic = "force-dynamic";
 
+/**
+ * Dashboard view modes:
+ *   self-ai    — show only Self-report and AI Agent scores
+ *   self-other — show only Self-report and Close Other scores
+ *   full       — show all three sources (default)
+ */
+type DashboardView = "self-ai" | "self-other" | "full";
+
+const VIEW_SOURCES: Record<DashboardView, string[]> = {
+  "self-ai": ["self", "ai"],
+  "self-other": ["self", "other"],
+  full: ["self", "ai", "other"],
+};
+
 interface Props {
-  searchParams: Promise<{ token?: string }>;
+  searchParams: Promise<{ token?: string; view?: string }>;
 }
 
 export default async function DashboardPage({ searchParams }: Props) {
-  const { token } = await searchParams;
+  const { token, view: rawView } = await searchParams;
 
   if (!token) {
     redirect("/");
   }
+
+  const view: DashboardView =
+    rawView === "self-ai" || rawView === "self-other" ? rawView : "full";
+
+  const allowedSources = VIEW_SOURCES[view];
 
   const data = await getParticipantByToken(token);
 
@@ -29,25 +48,30 @@ export default async function DashboardPage({ searchParams }: Props) {
     );
   }
 
-  const scoreSets = data.scores.map((s) => ({
-    source: s.source,
-    scores: {
-      honesty_humility: s.honesty_humility,
-      emotionality: s.emotionality,
-      extraversion: s.extraversion,
-      agreeableness: s.agreeableness,
-      conscientiousness: s.conscientiousness,
-      openness: s.openness,
-    },
-  }));
+  const scoreSets = data.scores
+    .filter((s) => allowedSources.includes(s.source))
+    .map((s) => ({
+      source: s.source,
+      scores: {
+        honesty_humility: s.honesty_humility,
+        emotionality: s.emotionality,
+        extraversion: s.extraversion,
+        agreeableness: s.agreeableness,
+        conscientiousness: s.conscientiousness,
+        openness: s.openness,
+      },
+    }));
 
-  const completedSources = data.scores.map((s) => s.source);
+  const completedSources = data.scores
+    .filter((s) => allowedSources.includes(s.source))
+    .map((s) => s.source);
 
   return (
     <DashboardClient
       label={data.label}
       scoreSets={scoreSets}
       completedSources={completedSources}
+      view={view}
     />
   );
 }

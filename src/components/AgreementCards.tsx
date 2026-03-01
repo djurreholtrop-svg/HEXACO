@@ -105,9 +105,15 @@ export default function AgreementCards({ scoreSets }: Props) {
                 <p className="text-2xl font-bold tabular-nums">
                   r = {result.r.toFixed(2)}
                 </p>
-                <p className={`text-sm font-medium mt-1 ${getCorrelationLabel(result.r).color}`}>
-                  ({getCorrelationLabel(result.r).text})
-                </p>
+                {result.r < 0 ? (
+                  <p className="text-sm font-medium mt-1 text-red-600">
+                    (negative)
+                  </p>
+                ) : (
+                  <p className={`text-sm font-medium mt-1 ${getCorrelationLabel(result.r).color}`}>
+                    ({getCorrelationLabel(result.r).text})
+                  </p>
+                )}
               </>
             ) : (
               <p className="text-sm text-gray-400">Awaiting data</p>
