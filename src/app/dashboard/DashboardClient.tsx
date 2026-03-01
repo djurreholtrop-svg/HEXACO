@@ -45,7 +45,7 @@ export default function DashboardClient({
     <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-bold">
-          {label ? `${label} — Personality Profile` : "Your Personality Profile"}
+          {label ? `${label} — Your personality dashboard` : "Your personality dashboard"}
         </h1>
         <p className="mt-1 text-gray-500">
           HEXACO-60 stanine scores from up to three sources: self-report, AI
@@ -80,6 +80,8 @@ export default function DashboardClient({
 
           <AgreementCards scoreSets={scoreSets} />
 
+          <ShareResults />
+
           <section>
             <h2 className="text-lg font-semibold mb-4">Score Details</h2>
             <div className="rounded-lg border bg-white p-4">
@@ -89,7 +91,7 @@ export default function DashboardClient({
 
           <section>
             <h2 className="text-lg font-semibold mb-4">
-              What Is a Stanine Score?
+              What do your scores mean?
             </h2>
             <div className="rounded-lg border bg-white p-6">
               <p className="text-sm text-gray-600 mb-3">
@@ -105,9 +107,14 @@ export default function DashboardClient({
                 of 1, 2, or 3 are below average, while scores of 7, 8, or 9 are
                 above average.
               </p>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 mb-3">
                 Think of it like a 9-point ladder: most people cluster in the
                 middle rungs, with fewer people at the very top or bottom.
+              </p>
+              <p className="text-sm text-gray-600">
+                For example, if your AI-agent score for Extraversion
+                is &lsquo;8&rsquo; it means that your AI-agent rated you as high
+                on extraversion.
               </p>
             </div>
           </section>
@@ -167,8 +174,6 @@ export default function DashboardClient({
               </div>
             </div>
           </section>
-
-          <ShareResults />
 
           <div className="text-center">
             <a

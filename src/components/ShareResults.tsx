@@ -63,7 +63,8 @@ export default function ShareResults() {
       <h2 className="text-lg font-semibold mb-4">Share My Results</h2>
       <div className="rounded-lg border bg-white p-4">
         <p className="text-sm text-gray-500 mb-4">
-          Share your personality profile with friends and family.
+          If you liked this research, please share your results and encourage
+          others to participate too!
         </p>
         <div className="flex flex-wrap gap-2">
           {TARGETS.map((target) => (

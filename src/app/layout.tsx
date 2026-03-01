@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "HEXACO Personality Dashboard",
+  title: "How well does my AI-agent know me?",
   description:
-    "View and compare HEXACO-60 personality scores from self-report, AI agent, and close other ratings.",
+    "My personality dashboard — compare HEXACO-60 personality scores from self-report, AI agent, and close other ratings.",
 };
 
 export default function RootLayout({
@@ -18,17 +18,17 @@ export default function RootLayout({
         <header className="border-b bg-white">
           <div className="mx-auto max-w-5xl px-4 py-4 flex items-center justify-between">
             <a href="/" className="text-xl font-bold tracking-tight">
-              HEXACO Dashboard
+              How well does my AI-agent know me?
             </a>
             <nav className="flex gap-4 text-sm text-gray-500">
-              <a href="/" className="hover:text-gray-900">
-                HEXACO
-              </a>
               <a href="/participate" className="hover:text-gray-900">
-                Taking the Research
+                Take the research
               </a>
               <a href="/research" className="hover:text-gray-900">
-                About the Research
+                About the research
+              </a>
+              <a href="/" className="hover:text-gray-900">
+                Home
               </a>
             </nav>
           </div>
