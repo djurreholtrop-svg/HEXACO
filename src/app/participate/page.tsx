@@ -3,7 +3,7 @@ export default function ParticipatePage() {
     <div className="py-12 space-y-10 max-w-3xl mx-auto">
       <section className="text-center space-y-4">
         <h1 className="text-3xl font-bold tracking-tight">
-          Participate in Our Research
+          See how well your AI-agent knows you &ndash; Participate in the research
         </h1>
         <p className="text-lg text-gray-500">
           We are looking for participants to contribute to our study on
@@ -47,9 +47,22 @@ export default function ParticipatePage() {
         <h2 className="text-xl font-semibold">How to sign up</h2>
         <p className="text-sm text-gray-600">
           Ready to participate? Click the button below to start the
-          questionnaire. It will take approximately 10 minutes to complete.
+          questionnaire. It will take approximately 25 minutes to complete.
         </p>
-        <div className="pt-2">
+        <div className="space-y-4 pt-2">
+          <div className="rounded-md bg-blue-50 p-4 text-sm text-gray-700">
+            <p className="font-medium mb-2">Before you start, to participate in this research you need to:</p>
+            <ol className="list-decimal list-inside space-y-1 pl-1">
+              <li>
+                Have access to an AI-agent to complete a questionnaire for you.
+                In most cases this requires a paid ChatGPT, Claude account, or
+                other generative AI account.
+              </li>
+              <li>
+                Be willing to enable your AI-agent to access your chat history.
+              </li>
+            </ol>
+          </div>
           <a
             href="https://tilburgss.co1.qualtrics.com/jfe/form/SV_9Kp2B62IUcnP7Wm?Source=Website"
             target="_blank"

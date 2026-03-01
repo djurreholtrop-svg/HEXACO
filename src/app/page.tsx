@@ -3,8 +3,11 @@ export default function HomePage() {
     <div className="py-12 space-y-12">
       <section className="text-center space-y-4">
         <h1 className="text-4xl font-bold tracking-tight">
-          HEXACO Personality Dashboard
+          How well does my AI-agent know me?
         </h1>
+        <p className="text-xl text-gray-600 font-medium">
+          My personality dashboard
+        </p>
         <p className="text-lg text-gray-500 max-w-2xl mx-auto">
           This research project compares personality profiles from three
           different sources using the HEXACO-60 questionnaire: your own
@@ -51,11 +54,13 @@ export default function HomePage() {
 
       <section className="max-w-3xl mx-auto">
         <h2 className="text-xl font-semibold mb-4 text-center">
-          About the HEXACO-60
+          About HEXACO Personality
         </h2>
         <div className="rounded-lg border bg-white p-6">
           <p className="text-sm text-gray-600 mb-4">
-            The HEXACO model of personality captures six broad dimensions:
+            In this research project, we measure your personality with the
+            HEXACO-60 personality inventory. The HEXACO model of personality
+            captures six broad dimensions:
           </p>
           <div className="grid gap-3 sm:grid-cols-2">
             {[
@@ -101,6 +106,20 @@ export default function HomePage() {
               </div>
             ))}
           </div>
+          <p className="text-sm text-gray-600 mt-4">
+            The HEXACO personality inventory has been developed by Kibeom Lee,
+            Ph.D., and Michael C. Ashton, Ph.D. For more information, head
+            to{" "}
+            <a
+              href="https://hexaco.org"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:text-blue-800 hover:underline"
+            >
+              HEXACO.org
+            </a>
+            .
+          </p>
         </div>
       </section>
 
