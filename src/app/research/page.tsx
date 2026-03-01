@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 export default function ResearchPage() {
   return (
     <div className="py-12 space-y-10 max-w-3xl mx-auto">
@@ -15,9 +17,13 @@ export default function ResearchPage() {
         <h2 className="text-xl font-semibold">Research Team</h2>
         <div className="space-y-4">
           <div className="flex gap-4 items-start">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gray-100 text-lg font-bold text-gray-500">
-              DH
-            </div>
+            <Image
+              src="/djurre-holtrop.jpg"
+              alt="Djurre Holtrop"
+              width={48}
+              height={48}
+              className="h-12 w-12 shrink-0 rounded-full object-cover"
+            />
             <div>
               <p className="font-medium">Djurre Holtrop</p>
               <p className="text-sm text-gray-500">

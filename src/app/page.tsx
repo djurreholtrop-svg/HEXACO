@@ -6,7 +6,7 @@ export default function HomePage() {
           How well does my AI-agent know me?
         </h1>
         <p className="text-xl text-gray-600 font-medium">
-          My personality dashboard
+          Your personality dashboard
         </p>
         <p className="text-lg text-gray-500 max-w-2xl mx-auto">
           This research project compares personality profiles from three
