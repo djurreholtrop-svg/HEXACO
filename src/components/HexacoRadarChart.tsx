@@ -41,9 +41,11 @@ const SOURCE_LABELS: Record<string, string> = {
 
 interface Props {
   scoreSets: ScoreSet[];
+  /** Min and max values for the radial axis. Defaults to [1, 9]. */
+  domain?: [number, number];
 }
 
-export default function HexacoRadarChart({ scoreSets }: Props) {
+export default function HexacoRadarChart({ scoreSets, domain = [1, 9] }: Props) {
   const data = DIMENSIONS.map((dim) => {
     const point: Record<string, string | number> = { dimension: dim.label };
     for (const set of scoreSets) {
@@ -57,7 +59,7 @@ export default function HexacoRadarChart({ scoreSets }: Props) {
       <RadarChart data={data} cx="50%" cy="50%" outerRadius="75%">
         <PolarGrid />
         <PolarAngleAxis dataKey="dimension" tick={{ fontSize: 13 }} />
-        <PolarRadiusAxis domain={[1, 9]} tickCount={9} />
+        <PolarRadiusAxis domain={domain} tickCount={domain[1] - domain[0] + 1} />
         {scoreSets.map((set) => (
           <Radar
             key={set.source}

@@ -36,6 +36,13 @@ export async function migrate() {
       UNIQUE(participant_id, source)
     )
   `;
+  // Add stanine columns (only populated for self-report scores)
+  await sql`ALTER TABLE scores ADD COLUMN IF NOT EXISTS honesty_humility_stanine REAL`;
+  await sql`ALTER TABLE scores ADD COLUMN IF NOT EXISTS emotionality_stanine REAL`;
+  await sql`ALTER TABLE scores ADD COLUMN IF NOT EXISTS extraversion_stanine REAL`;
+  await sql`ALTER TABLE scores ADD COLUMN IF NOT EXISTS agreeableness_stanine REAL`;
+  await sql`ALTER TABLE scores ADD COLUMN IF NOT EXISTS conscientiousness_stanine REAL`;
+  await sql`ALTER TABLE scores ADD COLUMN IF NOT EXISTS openness_stanine REAL`;
 }
 
 export function generateToken(): string {
@@ -65,12 +72,22 @@ export interface HexacoScores {
   openness: number;
 }
 
+export interface HexacoStanineScores {
+  honesty_humility_stanine: number;
+  emotionality_stanine: number;
+  extraversion_stanine: number;
+  agreeableness_stanine: number;
+  conscientiousness_stanine: number;
+  openness_stanine: number;
+}
+
 export type Source = "self" | "ai" | "other";
 
 export async function upsertScores(
   token: string,
   source: Source,
-  scores: HexacoScores
+  scores: HexacoScores,
+  stanineScores?: HexacoStanineScores
 ): Promise<boolean> {
   const sql = getSQL();
   let participants = await sql`
@@ -95,9 +112,24 @@ export async function upsertScores(
 
   const participantId = participants[0].id;
 
+  const hStan = stanineScores?.honesty_humility_stanine ?? null;
+  const eStan = stanineScores?.emotionality_stanine ?? null;
+  const xStan = stanineScores?.extraversion_stanine ?? null;
+  const aStan = stanineScores?.agreeableness_stanine ?? null;
+  const cStan = stanineScores?.conscientiousness_stanine ?? null;
+  const oStan = stanineScores?.openness_stanine ?? null;
+
   await sql`
-    INSERT INTO scores (participant_id, source, honesty_humility, emotionality, extraversion, agreeableness, conscientiousness, openness)
-    VALUES (${participantId}, ${source}, ${scores.honesty_humility}, ${scores.emotionality}, ${scores.extraversion}, ${scores.agreeableness}, ${scores.conscientiousness}, ${scores.openness})
+    INSERT INTO scores (
+      participant_id, source,
+      honesty_humility, emotionality, extraversion, agreeableness, conscientiousness, openness,
+      honesty_humility_stanine, emotionality_stanine, extraversion_stanine, agreeableness_stanine, conscientiousness_stanine, openness_stanine
+    )
+    VALUES (
+      ${participantId}, ${source},
+      ${scores.honesty_humility}, ${scores.emotionality}, ${scores.extraversion}, ${scores.agreeableness}, ${scores.conscientiousness}, ${scores.openness},
+      ${hStan}, ${eStan}, ${xStan}, ${aStan}, ${cStan}, ${oStan}
+    )
     ON CONFLICT(participant_id, source) DO UPDATE SET
       honesty_humility = EXCLUDED.honesty_humility,
       emotionality = EXCLUDED.emotionality,
@@ -105,6 +137,12 @@ export async function upsertScores(
       agreeableness = EXCLUDED.agreeableness,
       conscientiousness = EXCLUDED.conscientiousness,
       openness = EXCLUDED.openness,
+      honesty_humility_stanine = EXCLUDED.honesty_humility_stanine,
+      emotionality_stanine = EXCLUDED.emotionality_stanine,
+      extraversion_stanine = EXCLUDED.extraversion_stanine,
+      agreeableness_stanine = EXCLUDED.agreeableness_stanine,
+      conscientiousness_stanine = EXCLUDED.conscientiousness_stanine,
+      openness_stanine = EXCLUDED.openness_stanine,
       created_at = NOW()
   `;
 
@@ -123,6 +161,12 @@ export interface ParticipantData {
     agreeableness: number;
     conscientiousness: number;
     openness: number;
+    honesty_humility_stanine: number | null;
+    emotionality_stanine: number | null;
+    extraversion_stanine: number | null;
+    agreeableness_stanine: number | null;
+    conscientiousness_stanine: number | null;
+    openness_stanine: number | null;
     created_at: string;
   }[];
 }
@@ -140,7 +184,10 @@ export async function getParticipantByToken(
   const participant = participants[0];
 
   const scores = await sql`
-    SELECT source, honesty_humility, emotionality, extraversion, agreeableness, conscientiousness, openness, created_at
+    SELECT source,
+      honesty_humility, emotionality, extraversion, agreeableness, conscientiousness, openness,
+      honesty_humility_stanine, emotionality_stanine, extraversion_stanine, agreeableness_stanine, conscientiousness_stanine, openness_stanine,
+      created_at
     FROM scores
     WHERE participant_id = ${participant.id}
     ORDER BY source
@@ -158,6 +205,12 @@ export async function getParticipantByToken(
       agreeableness: Number(s.agreeableness),
       conscientiousness: Number(s.conscientiousness),
       openness: Number(s.openness),
+      honesty_humility_stanine: s.honesty_humility_stanine != null ? Number(s.honesty_humility_stanine) : null,
+      emotionality_stanine: s.emotionality_stanine != null ? Number(s.emotionality_stanine) : null,
+      extraversion_stanine: s.extraversion_stanine != null ? Number(s.extraversion_stanine) : null,
+      agreeableness_stanine: s.agreeableness_stanine != null ? Number(s.agreeableness_stanine) : null,
+      conscientiousness_stanine: s.conscientiousness_stanine != null ? Number(s.conscientiousness_stanine) : null,
+      openness_stanine: s.openness_stanine != null ? Number(s.openness_stanine) : null,
       created_at: s.created_at,
     })),
   };

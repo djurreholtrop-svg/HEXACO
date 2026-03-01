@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { upsertScores, type Source, type HexacoScores } from "@/lib/db";
+import {
+  upsertScores,
+  type Source,
+  type HexacoScores,
+  type HexacoStanineScores,
+} from "@/lib/db";
 
 const VALID_SOURCES: Source[] = ["self", "ai", "other"];
 
@@ -45,10 +50,17 @@ const QUALTRICS_SUFFIXES = Object.keys(QUALTRICS_SUFFIX_TO_SOURCE);
  * body may contain a mix of suffixes (e.g. both _S and _A keys). When that
  * happens we pick the suffix whose keys carry the most non-empty values,
  * which corresponds to the source that was just filled in.
+ *
+ * Also extracts stanine scores from keys with the _N suffix (e.g. HoHu_S_N).
+ * Stanine scores are only expected for self-report (_S) submissions.
  */
 function parseQualtricsBody(
   body: Record<string, unknown>
-): { source: Source; scores: Record<string, unknown> } | null {
+): {
+  source: Source;
+  scores: Record<string, unknown>;
+  stanineScores?: Record<string, unknown>;
+} | null {
   // Check if any Qualtrics-style key is present (e.g. HoHu_S, Emot_A)
   const qualtricsKeys = Object.keys(body).filter((key) =>
     QUALTRICS_PREFIXES.some((prefix) =>
@@ -78,7 +90,7 @@ function parseQualtricsBody(
     }
   }
 
-  // Otherwise pick the suffix with the most valid numeric scores (1-9 stanine).
+  // Otherwise pick the suffix with the most valid numeric scores (1-5 mean).
   // Qualtrics sends all embedded data, so previously-filled _S fields may
   // also have values. Counting valid scores (not just non-empty) helps
   // distinguish freshly computed values from empty/zero placeholders.
@@ -87,7 +99,7 @@ function parseQualtricsBody(
     for (const [suffix, keys] of Object.entries(suffixGroups)) {
       const validCount = keys.filter((k) => {
         const n = Number(body[k]);
-        return !isNaN(n) && n >= 1 && n <= 9;
+        return !isNaN(n) && n >= 1 && n <= 5;
       }).length;
       if (validCount > bestCount) {
         bestCount = validCount;
@@ -111,10 +123,35 @@ function parseQualtricsBody(
     }
   }
 
-  return { source, scores };
+  // Extract stanine scores from _S_N keys (only for self-report)
+  let stanineScores: Record<string, unknown> | undefined;
+  if (source === "self") {
+    const stanineKeys = Object.keys(body).filter((key) =>
+      QUALTRICS_PREFIXES.some((prefix) => key === `${prefix}_S_N`)
+    );
+    if (stanineKeys.length > 0) {
+      stanineScores = {};
+      for (const key of stanineKeys) {
+        // Remove the _S_N suffix to get the prefix
+        const prefix = key.slice(0, -4);
+        const dimension = QUALTRICS_PREFIX_TO_DIMENSION[prefix];
+        if (dimension) {
+          stanineScores[`${dimension}_stanine`] = body[key];
+        }
+      }
+    }
+  }
+
+  return { source, scores, stanineScores };
 }
 
-function validateScore(value: unknown): number | null {
+function validateMeanScore(value: unknown): number | null {
+  const n = Number(value);
+  if (isNaN(n) || n < 1 || n > 5) return null;
+  return Math.round(n * 100) / 100;
+}
+
+function validateStanineScore(value: unknown): number | null {
   const n = Number(value);
   if (isNaN(n) || n < 1 || n > 9) return null;
   return Math.round(n * 100) / 100;
@@ -186,24 +223,28 @@ function resolveToken(
  * {
  *   "token": "participant-token",
  *   "source": "self" | "ai" | "other",
- *   "honesty_humility": 5,
- *   "emotionality": 3,
- *   "extraversion": 7,
- *   "agreeableness": 4,
- *   "conscientiousness": 6,
- *   "openness": 8
+ *   "honesty_humility": 3.5,
+ *   "emotionality": 2.1,
+ *   "extraversion": 4.0,
+ *   "agreeableness": 3.8,
+ *   "conscientiousness": 4.2,
+ *   "openness": 3.0
  * }
  *
  * Qualtrics embedded data format (source is inferred from the suffix):
  * {
  *   "token": "participant-token",
- *   "HoHu_S": 5, "Emot_S": 3, "Extr_S": 7,
- *   "Agre_S": 4, "Cons_S": 6, "Open_S": 8
+ *   "HoHu_S": 3.5, "Emot_S": 2.1, "Extr_S": 4.0,
+ *   "Agre_S": 3.8, "Cons_S": 4.2, "Open_S": 3.0,
+ *   "HoHu_S_N": 6, "Emot_S_N": 3, "Extr_S_N": 7,
+ *   "Agre_S_N": 5, "Cons_S_N": 8, "Open_S_N": 4
  * }
  * Suffixes: _S = self, _A = ai, _O = other
+ * Stanine suffix: _S_N (only for self-report)
  *
  * The token can be provided in the body (as "token" or "Token") or as a
- * ?token= query parameter. All dimension scores should be stanine values between 1 and 9.
+ * ?token= query parameter. Mean scores should be between 1 and 5.
+ * Stanine scores (self-report only) should be between 1 and 9.
  */
 export async function POST(request: NextRequest) {
   const apiKey = process.env.API_SECRET_KEY;
@@ -257,11 +298,11 @@ export async function POST(request: NextRequest) {
 
   const scores: Partial<HexacoScores> = {};
   for (const key of DIMENSION_KEYS) {
-    const val = validateScore(scoreSource[key]);
+    const val = validateMeanScore(scoreSource[key]);
     if (val === null) {
       return NextResponse.json(
         {
-          error: `Invalid or missing '${key}'. Must be a number between 1 and 9.`,
+          error: `Invalid or missing '${key}'. Must be a number between 1 and 5.`,
         },
         { status: 400 }
       );
@@ -269,10 +310,48 @@ export async function POST(request: NextRequest) {
     scores[key] = val;
   }
 
+  // Parse stanine scores if present (self-report only)
+  const STANINE_KEYS: (keyof HexacoStanineScores)[] = [
+    "honesty_humility_stanine",
+    "emotionality_stanine",
+    "extraversion_stanine",
+    "agreeableness_stanine",
+    "conscientiousness_stanine",
+    "openness_stanine",
+  ];
+
+  let stanineScores: HexacoStanineScores | undefined;
+  const stanineSource: Record<string, unknown> = qualtrics?.stanineScores ?? body;
+
+  if (source === "self") {
+    const parsed: Partial<HexacoStanineScores> = {};
+    let hasAny = false;
+    for (const key of STANINE_KEYS) {
+      const raw = stanineSource[key];
+      if (raw !== undefined && raw !== null && raw !== "") {
+        const val = validateStanineScore(raw);
+        if (val === null) {
+          return NextResponse.json(
+            {
+              error: `Invalid '${key}'. Must be a number between 1 and 9.`,
+            },
+            { status: 400 }
+          );
+        }
+        parsed[key] = val;
+        hasAny = true;
+      }
+    }
+    if (hasAny && Object.keys(parsed).length === STANINE_KEYS.length) {
+      stanineScores = parsed as HexacoStanineScores;
+    }
+  }
+
   const success = await upsertScores(
     token.trim(),
     source as Source,
-    scores as HexacoScores
+    scores as HexacoScores,
+    stanineScores
   );
 
   if (!success) {
