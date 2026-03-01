@@ -18,17 +18,29 @@ interface ScoreSet {
   };
 }
 
+type DashboardView = "self-ai" | "self-other" | "full";
+
 interface Props {
   label: string | null;
   scoreSets: ScoreSet[];
   completedSources: string[];
+  view: DashboardView;
 }
+
+const VIEW_SOURCES: Record<DashboardView, string[]> = {
+  "self-ai": ["self", "ai"],
+  "self-other": ["self", "other"],
+  full: ["self", "ai", "other"],
+};
 
 export default function DashboardClient({
   label,
   scoreSets,
   completedSources,
+  view,
 }: Props) {
+  const visibleSources = VIEW_SOURCES[view];
+
   return (
     <div className="space-y-8">
       <div>
@@ -36,12 +48,15 @@ export default function DashboardClient({
           {label ? `${label} — Personality Profile` : "Your Personality Profile"}
         </h1>
         <p className="mt-1 text-gray-500">
-          HEXACO-60 scores from up to three sources: self-report, AI agent, and
-          a close other.
+          HEXACO-60 stanine scores from up to three sources: self-report, AI
+          agent, and a close other.
         </p>
       </div>
 
-      <StatusCards completedSources={completedSources} />
+      <StatusCards
+        completedSources={completedSources}
+        visibleSources={visibleSources}
+      />
 
       {scoreSets.length === 0 ? (
         <div className="rounded-lg border-2 border-dashed border-gray-300 p-12 text-center">
@@ -49,7 +64,7 @@ export default function DashboardClient({
             No scores have been submitted yet.
           </p>
           <p className="text-gray-400 text-sm mt-1">
-            Scores will appear here as each questionnaire is completed.
+            Scores will appear here once they have been submitted.
           </p>
         </div>
       ) : (
@@ -74,12 +89,37 @@ export default function DashboardClient({
 
           <section>
             <h2 className="text-lg font-semibold mb-4">
+              What Is a Stanine Score?
+            </h2>
+            <div className="rounded-lg border bg-white p-6">
+              <p className="text-sm text-gray-600 mb-3">
+                Your scores are shown as <strong>stanine scores</strong>, which
+                range from <strong>1</strong> (lowest) to <strong>9</strong>{" "}
+                (highest). &ldquo;Stanine&rdquo; stands for{" "}
+                <strong>sta</strong>ndard <strong>nine</strong> — a simple way to
+                compare your scores to the general population.
+              </p>
+              <p className="text-sm text-gray-600 mb-3">
+                A stanine of <strong>5</strong> is exactly average. Scores of 4,
+                5, or 6 are in the middle range and are considered typical. Scores
+                of 1, 2, or 3 are below average, while scores of 7, 8, or 9 are
+                above average.
+              </p>
+              <p className="text-sm text-gray-600">
+                Think of it like a 9-point ladder: most people cluster in the
+                middle rungs, with fewer people at the very top or bottom.
+              </p>
+            </div>
+          </section>
+
+          <section>
+            <h2 className="text-lg font-semibold mb-4">
               Understanding the HEXACO Dimensions
             </h2>
             <div className="rounded-lg border bg-white p-6">
               <p className="text-sm text-gray-600 mb-4">
                 The HEXACO model captures six broad dimensions of personality.
-                Each score ranges from 1 (low) to 5 (high).
+                Each stanine score ranges from 1 (low) to 9 (high).
               </p>
               <div className="grid gap-4 sm:grid-cols-2">
                 {[

@@ -78,7 +78,7 @@ function parseQualtricsBody(
     }
   }
 
-  // Otherwise pick the suffix with the most valid numeric scores (1-5).
+  // Otherwise pick the suffix with the most valid numeric scores (1-9 stanine).
   // Qualtrics sends all embedded data, so previously-filled _S fields may
   // also have values. Counting valid scores (not just non-empty) helps
   // distinguish freshly computed values from empty/zero placeholders.
@@ -87,7 +87,7 @@ function parseQualtricsBody(
     for (const [suffix, keys] of Object.entries(suffixGroups)) {
       const validCount = keys.filter((k) => {
         const n = Number(body[k]);
-        return !isNaN(n) && n >= 1 && n <= 5;
+        return !isNaN(n) && n >= 1 && n <= 9;
       }).length;
       if (validCount > bestCount) {
         bestCount = validCount;
@@ -116,7 +116,7 @@ function parseQualtricsBody(
 
 function validateScore(value: unknown): number | null {
   const n = Number(value);
-  if (isNaN(n) || n < 1 || n > 5) return null;
+  if (isNaN(n) || n < 1 || n > 9) return null;
   return Math.round(n * 100) / 100;
 }
 
@@ -186,24 +186,24 @@ function resolveToken(
  * {
  *   "token": "participant-token",
  *   "source": "self" | "ai" | "other",
- *   "honesty_humility": 3.5,
- *   "emotionality": 2.8,
- *   "extraversion": 4.1,
- *   "agreeableness": 3.2,
- *   "conscientiousness": 4.0,
- *   "openness": 3.7
+ *   "honesty_humility": 5,
+ *   "emotionality": 3,
+ *   "extraversion": 7,
+ *   "agreeableness": 4,
+ *   "conscientiousness": 6,
+ *   "openness": 8
  * }
  *
  * Qualtrics embedded data format (source is inferred from the suffix):
  * {
  *   "token": "participant-token",
- *   "HoHu_S": 3.5, "Emot_S": 2.8, "Extr_S": 4.1,
- *   "Agre_S": 3.2, "Cons_S": 4.0, "Open_S": 3.7
+ *   "HoHu_S": 5, "Emot_S": 3, "Extr_S": 7,
+ *   "Agre_S": 4, "Cons_S": 6, "Open_S": 8
  * }
  * Suffixes: _S = self, _A = ai, _O = other
  *
  * The token can be provided in the body (as "token" or "Token") or as a
- * ?token= query parameter. All dimension scores should be between 1.0 and 5.0.
+ * ?token= query parameter. All dimension scores should be stanine values between 1 and 9.
  */
 export async function POST(request: NextRequest) {
   const apiKey = process.env.API_SECRET_KEY;
@@ -261,7 +261,7 @@ export async function POST(request: NextRequest) {
     if (val === null) {
       return NextResponse.json(
         {
-          error: `Invalid or missing '${key}'. Must be a number between 1 and 5.`,
+          error: `Invalid or missing '${key}'. Must be a number between 1 and 9.`,
         },
         { status: 400 }
       );

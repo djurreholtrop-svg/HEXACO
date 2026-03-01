@@ -24,12 +24,15 @@ const SOURCES = [
 
 interface Props {
   completedSources: string[];
+  visibleSources: string[];
 }
 
-export default function StatusCards({ completedSources }: Props) {
+export default function StatusCards({ completedSources, visibleSources }: Props) {
+  const filtered = SOURCES.filter((s) => visibleSources.includes(s.key));
+
   return (
-    <div className="grid gap-4 sm:grid-cols-3">
-      {SOURCES.map((s) => {
+    <div className={`grid gap-4 sm:grid-cols-${filtered.length}`}>
+      {filtered.map((s) => {
         const done = completedSources.includes(s.key);
         return (
           <div

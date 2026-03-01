@@ -57,7 +57,7 @@ export default function HexacoRadarChart({ scoreSets }: Props) {
       <RadarChart data={data} cx="50%" cy="50%" outerRadius="75%">
         <PolarGrid />
         <PolarAngleAxis dataKey="dimension" tick={{ fontSize: 13 }} />
-        <PolarRadiusAxis domain={[1, 5]} tickCount={5} />
+        <PolarRadiusAxis domain={[1, 9]} tickCount={9} />
         {scoreSets.map((set) => (
           <Radar
             key={set.source}
