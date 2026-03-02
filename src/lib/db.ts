@@ -11,6 +11,15 @@ function getSQL() {
   return neon(databaseUrl, { fetchOptions: { cache: "no-store" } });
 }
 
+// Auto-migration: runs once per cold start to ensure schema is up-to-date
+let migrated = false;
+
+export async function ensureMigrated() {
+  if (migrated) return;
+  await migrate();
+  migrated = true;
+}
+
 export async function migrate() {
   const sql = getSQL();
   await sql`
@@ -89,6 +98,7 @@ export async function upsertScores(
   scores: HexacoScores,
   stanineScores?: HexacoStanineScores
 ): Promise<boolean> {
+  await ensureMigrated();
   const sql = getSQL();
   let participants = await sql`
     SELECT id FROM participants WHERE token = ${token}
@@ -174,6 +184,7 @@ export interface ParticipantData {
 export async function getParticipantByToken(
   token: string
 ): Promise<ParticipantData | null> {
+  await ensureMigrated();
   const sql = getSQL();
   const participants = await sql`
     SELECT id, token, label, created_at FROM participants WHERE token = ${token}
