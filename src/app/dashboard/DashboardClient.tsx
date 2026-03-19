@@ -1,6 +1,7 @@
 "use client";
 
 import AgreementCards from "@/components/AgreementCards";
+import AgreementSurvey from "@/components/AgreementSurvey";
 import HexacoRadarChart from "@/components/HexacoRadarChart";
 import ScoreTable from "@/components/ScoreTable";
 import ShareResults from "@/components/ShareResults";
@@ -30,6 +31,7 @@ interface StanineScores {
 }
 
 interface Props {
+  token: string;
   label: string | null;
   scoreSets: ScoreSet[];
   selfStanineScores: StanineScores | null;
@@ -44,6 +46,7 @@ const VIEW_SOURCES: Record<DashboardView, string[]> = {
 };
 
 export default function DashboardClient({
+  token,
   label,
   scoreSets,
   selfStanineScores,
@@ -51,6 +54,7 @@ export default function DashboardClient({
   view,
 }: Props) {
   const visibleSources = VIEW_SOURCES[view];
+  const hasAiScores = completedSources.includes("ai");
 
   return (
     <div className="space-y-8">
@@ -216,6 +220,8 @@ export default function DashboardClient({
           </div>
         </>
       )}
+
+      {hasAiScores && <AgreementSurvey token={token} />}
     </div>
   );
 }
