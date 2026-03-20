@@ -5,6 +5,19 @@ export const metadata: Metadata = {
   title: "How well does my AI-agent know me?",
   description:
     "My personality dashboard — compare HEXACO-60 personality scores from self-report, AI agent, and close other ratings.",
+  openGraph: {
+    title: "How well does my AI-agent know me?",
+    description:
+      "How I see myself, versus how my AI-agent sees me, versus how someone else sees me. Check out my full profile and create your own!",
+    siteName: "HEXACO Personality Dashboard",
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "How well does my AI-agent know me?",
+    description:
+      "How I see myself, versus how my AI-agent sees me, versus how someone else sees me. Check out my full profile and create your own!",
+  },
 };
 
 export default function RootLayout({

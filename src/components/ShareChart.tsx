@@ -6,44 +6,6 @@ import { toPng } from "html-to-image";
 const SHARE_TEXT =
   "How I see myself, versus how my AI-agent sees me, versus how someone else sees me. Check out my full profile and create your own here:";
 
-interface ShareTarget {
-  name: string;
-  buildUrl: (dashboardUrl: string, text: string) => string;
-  color: string;
-  hoverColor: string;
-}
-
-const TARGETS: ShareTarget[] = [
-  {
-    name: "WhatsApp",
-    buildUrl: (url, text) =>
-      `https://api.whatsapp.com/send?text=${encodeURIComponent(`${text} ${url}`)}`,
-    color: "bg-green-600",
-    hoverColor: "hover:bg-green-700",
-  },
-  {
-    name: "Signal",
-    buildUrl: (url, text) =>
-      `https://signal.me/#p/?text=${encodeURIComponent(`${text} ${url}`)}`,
-    color: "bg-blue-600",
-    hoverColor: "hover:bg-blue-700",
-  },
-  {
-    name: "Facebook",
-    buildUrl: (url) =>
-      `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`,
-    color: "bg-blue-700",
-    hoverColor: "hover:bg-blue-800",
-  },
-  {
-    name: "LinkedIn",
-    buildUrl: (url) =>
-      `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`,
-    color: "bg-blue-800",
-    hoverColor: "hover:bg-blue-900",
-  },
-];
-
 interface Props {
   children: React.ReactNode;
 }
@@ -59,7 +21,7 @@ export default function ShareChart({ children }: Props) {
     return url.toString();
   }
 
-  const downloadImage = useCallback(async () => {
+  const downloadChart = useCallback(async () => {
     if (!chartRef.current || downloading) return;
     setDownloading(true);
     try {
@@ -72,27 +34,37 @@ export default function ShareChart({ children }: Props) {
       link.href = dataUrl;
       link.click();
     } catch {
-      // Fallback: just ignore
+      // silently fail
     } finally {
       setDownloading(false);
     }
   }, [downloading]);
 
-  function handleShare(target: ShareTarget) {
+  async function handleShare() {
     const url = getShareUrl();
-    window.open(
-      target.buildUrl(url, SHARE_TEXT),
-      "_blank",
-      "noopener,noreferrer"
-    );
-  }
+    const shareData = {
+      title: "My HEXACO Personality Profile",
+      text: SHARE_TEXT,
+      url,
+    };
 
-  function handleCopyLink() {
-    const url = getShareUrl();
-    navigator.clipboard.writeText(`${SHARE_TEXT} ${url}`).then(() => {
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+        return;
+      } catch {
+        // User cancelled or share failed — fall through to copy
+      }
+    }
+
+    // Fallback: copy to clipboard
+    try {
+      await navigator.clipboard.writeText(`${SHARE_TEXT} ${url}`);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    });
+    } catch {
+      // ignore
+    }
   }
 
   return (
@@ -100,34 +72,23 @@ export default function ShareChart({ children }: Props) {
       <div ref={chartRef} className="rounded-lg border bg-white p-4">
         {children}
       </div>
-      <div className="mt-3">
-        <p className="text-sm text-gray-500 mb-2">
-          Share your personality chart
+      <div className="mt-3 flex flex-wrap gap-2">
+        <button
+          onClick={handleShare}
+          className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
+        >
+          {copied ? "Link copied!" : "Share"}
+        </button>
+        <button
+          onClick={downloadChart}
+          disabled={downloading}
+          className="inline-flex items-center rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+        >
+          {downloading ? "Saving..." : "Download chart"}
+        </button>
+        <p className="self-center text-xs text-gray-400">
+          Download your chart to share on Instagram or other platforms
         </p>
-        <div className="flex flex-wrap gap-2">
-          {TARGETS.map((target) => (
-            <button
-              key={target.name}
-              onClick={() => handleShare(target)}
-              className={`inline-flex items-center rounded-md px-3 py-1.5 text-xs font-medium text-white ${target.color} ${target.hoverColor} transition-colors`}
-            >
-              {target.name}
-            </button>
-          ))}
-          <button
-            onClick={downloadImage}
-            disabled={downloading}
-            className="inline-flex items-center rounded-md px-3 py-1.5 text-xs font-medium border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
-          >
-            {downloading ? "Saving..." : "Save image"}
-          </button>
-          <button
-            onClick={handleCopyLink}
-            className="inline-flex items-center rounded-md px-3 py-1.5 text-xs font-medium border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
-          >
-            {copied ? "Copied!" : "Copy link"}
-          </button>
-        </div>
       </div>
     </div>
   );
