@@ -5,7 +5,7 @@ import AgreementSurvey from "@/components/AgreementSurvey";
 import HexacoRadarChart from "@/components/HexacoRadarChart";
 import ParticipationCTA from "@/components/ParticipationCTA";
 import ScoreTable from "@/components/ScoreTable";
-import ShareResults from "@/components/ShareResults";
+import ShareChart from "@/components/ShareChart";
 import StatusCards from "@/components/StatusCards";
 
 interface ScoreSet {
@@ -100,9 +100,9 @@ export default function DashboardClient({
             <h2 className="text-lg font-semibold mb-4">
               Personality Radar Chart
             </h2>
-            <div className="rounded-lg border bg-white p-4">
+            <ShareChart>
               <HexacoRadarChart scoreSets={scoreSets} domain={[1, 5]} />
-            </div>
+            </ShareChart>
           </section>
 
           <AgreementCards scoreSets={scoreSets} />
@@ -227,8 +227,6 @@ export default function DashboardClient({
               </div>
             </div>
           </section>
-
-          <ShareResults />
 
           <div className="text-center">
             <a

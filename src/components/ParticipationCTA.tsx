@@ -38,7 +38,7 @@ export default function ParticipationCTA() {
             </p>
             <div className="flex gap-2">
               <a
-                href="/research"
+                href="https://hexaco-agent.vercel.app/participate"
                 className="inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
               >
                 Take the research
