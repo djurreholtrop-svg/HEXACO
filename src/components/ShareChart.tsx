@@ -72,23 +72,30 @@ export default function ShareChart({ children }: Props) {
       <div ref={chartRef} className="rounded-lg border bg-white p-4">
         {children}
       </div>
-      <div className="mt-3 flex flex-wrap gap-2">
-        <button
-          onClick={handleShare}
-          className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
-        >
-          {copied ? "Link copied!" : "Share"}
-        </button>
-        <button
-          onClick={downloadChart}
-          disabled={downloading}
-          className="inline-flex items-center rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-        >
-          {downloading ? "Saving..." : "Download chart"}
-        </button>
-        <p className="self-center text-xs text-gray-400">
-          Download your chart to share on Instagram or other platforms
+      <div className="mt-4 rounded-lg border bg-gray-50 p-4">
+        <p className="text-sm text-gray-600 italic mb-3">
+          &ldquo;How I see myself, versus how my AI-agent sees me, versus how
+          someone else sees me. Check out my full profile and create your own
+          here!&rdquo;
         </p>
+        <div className="flex flex-wrap gap-2 items-center">
+          <button
+            onClick={handleShare}
+            className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
+          >
+            {copied ? "Link copied!" : "Share"}
+          </button>
+          <button
+            onClick={downloadChart}
+            disabled={downloading}
+            className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+          >
+            {downloading ? "Saving..." : "Download chart"}
+          </button>
+          <span className="text-xs text-gray-400">
+            Download your chart to share on Instagram or other platforms
+          </span>
+        </div>
       </div>
     </div>
   );
