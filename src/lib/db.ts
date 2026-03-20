@@ -52,6 +52,20 @@ export async function migrate() {
   await sql`ALTER TABLE scores ADD COLUMN IF NOT EXISTS agreeableness_stanine REAL`;
   await sql`ALTER TABLE scores ADD COLUMN IF NOT EXISTS conscientiousness_stanine REAL`;
   await sql`ALTER TABLE scores ADD COLUMN IF NOT EXISTS openness_stanine REAL`;
+
+  // Agreement responses (Likert ratings of AI agent accuracy)
+  await sql`
+    CREATE TABLE IF NOT EXISTS agreement_responses (
+      id SERIAL PRIMARY KEY,
+      participant_id INTEGER NOT NULL REFERENCES participants(id),
+      q1 INTEGER NOT NULL CHECK(q1 BETWEEN 1 AND 7),
+      q2 INTEGER NOT NULL CHECK(q2 BETWEEN 1 AND 7),
+      q3 INTEGER NOT NULL CHECK(q3 BETWEEN 1 AND 7),
+      q4 INTEGER NOT NULL CHECK(q4 BETWEEN 1 AND 7),
+      created_at TIMESTAMP DEFAULT NOW(),
+      UNIQUE(participant_id)
+    )
+  `;
 }
 
 export function generateToken(): string {
@@ -225,6 +239,84 @@ export async function getParticipantByToken(
       created_at: s.created_at,
     })),
   };
+}
+
+export async function upsertAgreement(
+  token: string,
+  q1: number,
+  q2: number,
+  q3: number,
+  q4: number
+): Promise<boolean> {
+  await ensureMigrated();
+  const sql = getSQL();
+  const participants = await sql`
+    SELECT id FROM participants WHERE token = ${token}
+  `;
+  if (participants.length === 0) return false;
+
+  const participantId = participants[0].id;
+  await sql`
+    INSERT INTO agreement_responses (participant_id, q1, q2, q3, q4)
+    VALUES (${participantId}, ${q1}, ${q2}, ${q3}, ${q4})
+    ON CONFLICT(participant_id) DO UPDATE SET
+      q1 = EXCLUDED.q1,
+      q2 = EXCLUDED.q2,
+      q3 = EXCLUDED.q3,
+      q4 = EXCLUDED.q4,
+      created_at = NOW()
+  `;
+  return true;
+}
+
+export async function getAgreementByToken(
+  token: string
+): Promise<{ q1: number; q2: number; q3: number; q4: number } | null> {
+  await ensureMigrated();
+  const sql = getSQL();
+  const rows = await sql`
+    SELECT a.q1, a.q2, a.q3, a.q4
+    FROM agreement_responses a
+    JOIN participants p ON p.id = a.participant_id
+    WHERE p.token = ${token}
+  `;
+  if (rows.length === 0) return null;
+  return {
+    q1: Number(rows[0].q1),
+    q2: Number(rows[0].q2),
+    q3: Number(rows[0].q3),
+    q4: Number(rows[0].q4),
+  };
+}
+
+export interface AgreementRow {
+  token: string;
+  label: string | null;
+  q1: number;
+  q2: number;
+  q3: number;
+  q4: number;
+  created_at: string;
+}
+
+export async function listAgreementResponses(): Promise<AgreementRow[]> {
+  await ensureMigrated();
+  const sql = getSQL();
+  const rows = await sql`
+    SELECT p.token, p.label, a.q1, a.q2, a.q3, a.q4, a.created_at
+    FROM agreement_responses a
+    JOIN participants p ON p.id = a.participant_id
+    ORDER BY a.created_at DESC
+  `;
+  return rows.map((r) => ({
+    token: String(r.token),
+    label: r.label ? String(r.label) : null,
+    q1: Number(r.q1),
+    q2: Number(r.q2),
+    q3: Number(r.q3),
+    q4: Number(r.q4),
+    created_at: String(r.created_at),
+  }));
 }
 
 export async function listParticipants(): Promise<

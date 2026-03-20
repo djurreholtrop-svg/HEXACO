@@ -88,6 +88,7 @@ export default async function DashboardPage({ searchParams }: Props) {
 
   return (
     <DashboardClient
+      token={token}
       label={data.label}
       scoreSets={scoreSets}
       selfStanineScores={selfStanineScores}
