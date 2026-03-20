@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_BASE_URL ?? "https://hexaco-agent.vercel.app"
+  ),
   title: "How well does my AI-agent know me?",
   description:
     "My personality dashboard — compare HEXACO-60 personality scores from self-report, AI agent, and close other ratings.",
@@ -13,7 +16,7 @@ export const metadata: Metadata = {
     type: "website",
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: "How well does my AI-agent know me?",
     description:
       "How I see myself, versus how my AI-agent sees me, versus how someone else sees me. Check out my full profile and create your own!",
