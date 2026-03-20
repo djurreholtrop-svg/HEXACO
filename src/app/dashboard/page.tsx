@@ -19,11 +19,11 @@ const VIEW_SOURCES: Record<DashboardView, string[]> = {
 };
 
 interface Props {
-  searchParams: Promise<{ token?: string; view?: string }>;
+  searchParams: Promise<{ token?: string; view?: string; shared?: string }>;
 }
 
 export default async function DashboardPage({ searchParams }: Props) {
-  const { token, view: rawView } = await searchParams;
+  const { token, view: rawView, shared } = await searchParams;
 
   if (!token) {
     redirect("/");
@@ -94,6 +94,7 @@ export default async function DashboardPage({ searchParams }: Props) {
       selfStanineScores={selfStanineScores}
       completedSources={completedSources}
       view={view}
+      isShared={shared === "1"}
     />
   );
 }

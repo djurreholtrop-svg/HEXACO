@@ -3,6 +3,7 @@
 import AgreementCards from "@/components/AgreementCards";
 import AgreementSurvey from "@/components/AgreementSurvey";
 import HexacoRadarChart from "@/components/HexacoRadarChart";
+import ParticipationCTA from "@/components/ParticipationCTA";
 import ScoreTable from "@/components/ScoreTable";
 import ShareResults from "@/components/ShareResults";
 import StatusCards from "@/components/StatusCards";
@@ -37,6 +38,7 @@ interface Props {
   selfStanineScores: StanineScores | null;
   completedSources: string[];
   view: DashboardView;
+  isShared: boolean;
 }
 
 const VIEW_SOURCES: Record<DashboardView, string[]> = {
@@ -52,6 +54,7 @@ export default function DashboardClient({
   selfStanineScores,
   completedSources,
   view,
+  isShared,
 }: Props) {
   const visibleSources = VIEW_SOURCES[view];
   const hasAiScores = completedSources.includes("ai");
@@ -64,7 +67,8 @@ export default function DashboardClient({
         </h1>
         <p className="mt-1 text-gray-500">
           HEXACO-60 scores from up to three sources: self-report, AI agent,
-          and a close other.
+          and a close other. The meaning of the dimensions is explained at the
+          bottom of this page.
         </p>
       </div>
 
@@ -84,6 +88,14 @@ export default function DashboardClient({
         </div>
       ) : (
         <>
+          {/* ── Part 1: Your personality profile agreement ── */}
+          <div className="border-b pb-2">
+            <h2 className="text-xl font-bold">Your personality profile agreement</h2>
+            <p className="text-sm text-gray-500 mt-1">
+              How well do your different personality assessments agree with each other?
+            </p>
+          </div>
+
           <section>
             <h2 className="text-lg font-semibold mb-4">
               Personality Radar Chart
@@ -95,8 +107,6 @@ export default function DashboardClient({
 
           <AgreementCards scoreSets={scoreSets} />
 
-          <ShareResults />
-
           <section>
             <h2 className="text-lg font-semibold mb-4">Score Details</h2>
             <div className="rounded-lg border bg-white p-4">
@@ -104,51 +114,61 @@ export default function DashboardClient({
             </div>
           </section>
 
+          {/* ── Part 2: Your personality levels ── */}
           {selfStanineScores && (
-            <section>
-              <h2 className="text-lg font-semibold mb-4">
-                Your scores compared to the general population
-              </h2>
-              <div className="rounded-lg border bg-white p-4">
-                <HexacoRadarChart
-                  scoreSets={[
-                    { source: "self", scores: selfStanineScores },
-                  ]}
-                  domain={[1, 9]}
-                />
+            <>
+              <div className="border-b pb-2 mt-4">
+                <h2 className="text-xl font-bold">Your personality levels</h2>
+                <p className="text-sm text-gray-500 mt-1">
+                  Your self-report scores converted to stanine scores so you can see where you fall relative to others.
+                </p>
               </div>
-            </section>
-          )}
 
-          <section>
-            <h2 className="text-lg font-semibold mb-4">
-              What do your stanine scores mean?
-            </h2>
-            <div className="rounded-lg border bg-white p-6">
-              <p className="text-sm text-gray-600 mb-3">
-                Your scores are shown as <strong>stanine scores</strong>, which
-                range from <strong>1</strong> (lowest) to <strong>9</strong>{" "}
-                (highest). &ldquo;Stanine&rdquo; stands for{" "}
-                <strong>sta</strong>ndard <strong>nine</strong> — a simple way to
-                compare your scores to the general population.
-              </p>
-              <p className="text-sm text-gray-600 mb-3">
-                A stanine of <strong>5</strong> is exactly average. Scores of 4,
-                5, or 6 are in the middle range and are considered typical. Scores
-                of 1, 2, or 3 are below average, while scores of 7, 8, or 9 are
-                above average.
-              </p>
-              <p className="text-sm text-gray-600 mb-3">
-                Think of it like a 9-point ladder: most people cluster in the
-                middle rungs, with fewer people at the very top or bottom.
-              </p>
-              <p className="text-sm text-gray-600">
-                For example, if your AI-agent score for Extraversion
-                is &lsquo;8&rsquo; it means that your AI-agent rated you as high
-                on extraversion.
-              </p>
-            </div>
-          </section>
+              <section>
+                <h2 className="text-lg font-semibold mb-4">
+                  Your stanine scores
+                </h2>
+                <div className="rounded-lg border bg-white p-4">
+                  <HexacoRadarChart
+                    scoreSets={[
+                      { source: "self", scores: selfStanineScores },
+                    ]}
+                    domain={[1, 9]}
+                  />
+                </div>
+              </section>
+
+              <section>
+                <h2 className="text-lg font-semibold mb-4">
+                  What do your stanine scores mean?
+                </h2>
+                <div className="rounded-lg border bg-white p-6">
+                  <p className="text-sm text-gray-600 mb-3">
+                    Your scores are shown as <strong>stanine scores</strong>, which
+                    range from <strong>1</strong> (lowest) to <strong>9</strong>{" "}
+                    (highest). &ldquo;Stanine&rdquo; stands for{" "}
+                    <strong>sta</strong>ndard <strong>nine</strong> — a simple way to
+                    compare your scores to the general population.
+                  </p>
+                  <p className="text-sm text-gray-600 mb-3">
+                    A stanine of <strong>5</strong> is exactly average. Scores of 4,
+                    5, or 6 are in the middle range and are considered typical. Scores
+                    of 1, 2, or 3 are below average, while scores of 7, 8, or 9 are
+                    above average.
+                  </p>
+                  <p className="text-sm text-gray-600 mb-3">
+                    Think of it like a 9-point ladder: most people cluster in the
+                    middle rungs, with fewer people at the very top or bottom.
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    For example, if your AI-agent score for Extraversion
+                    is &lsquo;8&rsquo; it means that your AI-agent rated you as high
+                    on extraversion.
+                  </p>
+                </div>
+              </section>
+            </>
+          )}
 
           <section>
             <h2 className="text-lg font-semibold mb-4">
@@ -157,7 +177,9 @@ export default function DashboardClient({
             <div className="rounded-lg border bg-white p-6">
               <p className="text-sm text-gray-600 mb-4">
                 The HEXACO model captures six broad dimensions of personality.
-                Each stanine score ranges from 1 (low) to 9 (high).
+                Each stanine score ranges from 1 (low) to 9 (high). High or low
+                scores are not necessarily good or bad. These are average
+                behavior tendencies that can be adaptive in different situations.
               </p>
               <div className="grid gap-4 sm:grid-cols-2">
                 {[
@@ -206,6 +228,8 @@ export default function DashboardClient({
             </div>
           </section>
 
+          <ShareResults />
+
           <div className="text-center">
             <a
               href="https://hexaco.org"
@@ -221,7 +245,8 @@ export default function DashboardClient({
         </>
       )}
 
-      {hasAiScores && <AgreementSurvey token={token} />}
+      {hasAiScores && !isShared && <AgreementSurvey token={token} />}
+      {isShared && <ParticipationCTA />}
     </div>
   );
 }
