@@ -3,6 +3,7 @@
 import AgreementCards from "@/components/AgreementCards";
 import AgreementSurvey from "@/components/AgreementSurvey";
 import HexacoRadarChart from "@/components/HexacoRadarChart";
+import ParticipationCTA from "@/components/ParticipationCTA";
 import ScoreTable from "@/components/ScoreTable";
 import ShareResults from "@/components/ShareResults";
 import StatusCards from "@/components/StatusCards";
@@ -66,7 +67,8 @@ export default function DashboardClient({
         </h1>
         <p className="mt-1 text-gray-500">
           HEXACO-60 scores from up to three sources: self-report, AI agent,
-          and a close other.
+          and a close other. The meaning of the dimensions is explained at the
+          bottom of this page.
         </p>
       </div>
 
@@ -175,7 +177,9 @@ export default function DashboardClient({
             <div className="rounded-lg border bg-white p-6">
               <p className="text-sm text-gray-600 mb-4">
                 The HEXACO model captures six broad dimensions of personality.
-                Each stanine score ranges from 1 (low) to 9 (high).
+                Each stanine score ranges from 1 (low) to 9 (high). High or low
+                scores are not necessarily good or bad. These are average
+                behavior tendencies that can be adaptive in different situations.
               </p>
               <div className="grid gap-4 sm:grid-cols-2">
                 {[
@@ -242,6 +246,7 @@ export default function DashboardClient({
       )}
 
       {hasAiScores && !isShared && <AgreementSurvey token={token} />}
+      {isShared && <ParticipationCTA />}
     </div>
   );
 }

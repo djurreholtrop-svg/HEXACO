@@ -1,10 +1,10 @@
+import RotatingTitle from "@/components/RotatingTitle";
+
 export default function HomePage() {
   return (
     <div className="py-12 space-y-12">
       <section className="text-center space-y-4">
-        <h1 className="text-4xl font-bold tracking-tight">
-          How well does my AI-agent know me?
-        </h1>
+        <RotatingTitle />
         <p className="text-xl text-gray-600 font-medium">
           Your personality dashboard
         </p>

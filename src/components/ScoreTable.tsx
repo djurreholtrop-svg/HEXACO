@@ -64,7 +64,7 @@ export default function ScoreTable({ rows }: Props) {
               </td>
               {DIMENSIONS.map((d) => (
                 <td key={d.key} className="py-3 px-3 text-center tabular-nums">
-                  {Math.round(row.scores[d.key])}
+                  {row.scores[d.key].toFixed(2)}
                 </td>
               ))}
             </tr>
