@@ -73,11 +73,6 @@ export default function ShareChart({ children }: Props) {
         {children}
       </div>
       <div className="mt-4 rounded-lg border bg-gray-50 p-4">
-        <p className="text-sm text-gray-600 italic mb-3">
-          &ldquo;How I see myself, versus how my AI-agent sees me, versus how
-          someone else sees me. Check out my full profile and create your own
-          here!&rdquo;
-        </p>
         <div className="flex flex-wrap gap-2 items-center">
           <button
             onClick={handleShare}
@@ -96,6 +91,11 @@ export default function ShareChart({ children }: Props) {
             Download your chart to share on Instagram or other platforms
           </span>
         </div>
+        <p className="text-xs text-gray-400 italic mt-3">
+          Shared message: &ldquo;How I see myself, versus how my AI-agent sees
+          me, versus how someone else sees me. Check out my full profile and
+          create your own here!&rdquo;
+        </p>
       </div>
     </div>
   );
