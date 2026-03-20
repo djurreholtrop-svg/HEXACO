@@ -47,7 +47,7 @@ export default function AgreementSurvey({ token }: Props) {
   // Show panel after 5 seconds
   useEffect(() => {
     if (alreadyDone) return;
-    const timer = setTimeout(() => setVisible(true), 5000);
+    const timer = setTimeout(() => setVisible(true), 15000);
     return () => clearTimeout(timer);
   }, [alreadyDone]);
 

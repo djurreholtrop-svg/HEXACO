@@ -91,11 +91,6 @@ export default function ShareChart({ children }: Props) {
             Download your chart to share on Instagram or other platforms
           </span>
         </div>
-        <p className="text-xs text-gray-400 italic mt-3">
-          Shared message: &ldquo;How I see myself, versus how my AI-agent sees
-          me, versus how someone else sees me. Check out my full profile and
-          create your own here!&rdquo;
-        </p>
       </div>
     </div>
   );
