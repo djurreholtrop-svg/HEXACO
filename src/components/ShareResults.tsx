@@ -45,13 +45,19 @@ const TARGETS: ShareTarget[] = [
 export default function ShareResults() {
   const [copied, setCopied] = useState(false);
 
+  function getShareUrl() {
+    const url = new URL(window.location.href);
+    url.searchParams.set("shared", "1");
+    return url.toString();
+  }
+
   function handleShare(target: ShareTarget) {
-    const url = window.location.href;
+    const url = getShareUrl();
     window.open(target.buildUrl(url, SHARE_TEXT), "_blank", "noopener,noreferrer");
   }
 
   function handleCopyLink() {
-    const url = window.location.href;
+    const url = getShareUrl();
     navigator.clipboard.writeText(url).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
