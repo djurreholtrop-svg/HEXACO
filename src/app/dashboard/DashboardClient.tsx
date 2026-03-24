@@ -3,6 +3,7 @@
 import AgreementCards from "@/components/AgreementCards";
 import AgreementSurvey from "@/components/AgreementSurvey";
 import HexacoRadarChart from "@/components/HexacoRadarChart";
+import MissingAiScores from "@/components/MissingAiScores";
 import ParticipationCTA from "@/components/ParticipationCTA";
 import ScoreTable from "@/components/ScoreTable";
 import ShareChart from "@/components/ShareChart";
@@ -57,6 +58,7 @@ export default function DashboardClient({
   isShared,
 }: Props) {
   const visibleSources = VIEW_SOURCES[view];
+  const hasSelfScores = completedSources.includes("self");
   const hasAiScores = completedSources.includes("ai");
 
   return (
@@ -243,7 +245,8 @@ export default function DashboardClient({
         </>
       )}
 
-      {hasAiScores && !isShared && <AgreementSurvey token={token} />}
+      {hasSelfScores && hasAiScores && !isShared && <AgreementSurvey token={token} />}
+      {hasSelfScores && !hasAiScores && !isShared && <MissingAiScores token={token} />}
       {isShared && <ParticipationCTA />}
     </div>
   );

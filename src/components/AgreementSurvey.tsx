@@ -44,10 +44,10 @@ export default function AgreementSurvey({ token }: Props) {
       .catch(() => {});
   }, [token]);
 
-  // Show panel after 5 seconds
+  // Show panel after 10 seconds
   useEffect(() => {
     if (alreadyDone) return;
-    const timer = setTimeout(() => setVisible(true), 15000);
+    const timer = setTimeout(() => setVisible(true), 10000);
     return () => clearTimeout(timer);
   }, [alreadyDone]);
 
@@ -114,6 +114,11 @@ export default function AgreementSurvey({ token }: Props) {
             </div>
           ) : (
             <div className="px-5 py-4 space-y-5">
+              <p className="text-sm text-gray-600">
+                Welcome to your dashboard, we hope you enjoy seeing your
+                results. Could you answer a few short questions to help us
+                understand your views on AI-personality ratings?
+              </p>
               <p className="text-xs text-gray-500">
                 Please rate each statement from 1 (strongly disagree) to 7
                 (strongly agree).
